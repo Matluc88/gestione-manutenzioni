@@ -198,7 +198,7 @@ export async function generateReportPDF({ reportId }: GeneratePDFOptions): Promi
 
     currentY += 25;
 
-    if (att.componente) {
+    if (att.componente && report.tipo === 'MANUTENZIONE') {
       doc
         .fontSize(10)
         .font('Helvetica')
@@ -208,31 +208,41 @@ export async function generateReportPDF({ reportId }: GeneratePDFOptions): Promi
       currentY += 20;
     }
 
-    let statoText = '';
-    let statoColor = '#000000';
-    
-    switch (att.stato) {
-      case 'FATTO':
-        statoText = '✓ FATTO';
-        statoColor = '#16a34a'; // verde
-        break;
-      case 'NON_FATTO':
-        statoText = '✗ NON FATTO';
-        statoColor = '#dc2626'; // rosso
-        break;
-      case 'NON_APPLICABILE':
-        statoText = '○ NON APPLICABILE';
-        statoColor = '#6b7280'; // grigio
-        break;
-    }
+    if (report.tipo === 'INTERVENTO') {
+      doc
+        .fontSize(11)
+        .font('Helvetica')
+        .fillColor('#16a34a')
+        .text('✓', 70, currentY);
+      doc.fillColor('#000000');
+      currentY += 20;
+    } else {
+      let statoText = '';
+      let statoColor = '#000000';
+      
+      switch (att.stato) {
+        case 'FATTO':
+          statoText = '✓ FATTO';
+          statoColor = '#16a34a';
+          break;
+        case 'NON_FATTO':
+          statoText = '✗ NON FATTO';
+          statoColor = '#dc2626';
+          break;
+        case 'NON_APPLICABILE':
+          statoText = '○ NON APPLICABILE';
+          statoColor = '#6b7280';
+          break;
+      }
 
-    doc
-      .fontSize(11)
-      .font('Helvetica-Bold')
-      .fillColor(statoColor)
-      .text(`Stato: ${statoText}`, 70, currentY);
-    doc.fillColor('#000000');
-    currentY += 25;
+      doc
+        .fontSize(11)
+        .font('Helvetica-Bold')
+        .fillColor(statoColor)
+        .text(`Stato: ${statoText}`, 70, currentY);
+      doc.fillColor('#000000');
+      currentY += 25;
+    }
 
     if (att.motivazione) {
       doc
