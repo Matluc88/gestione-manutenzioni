@@ -95,6 +95,8 @@ model Attivita {
   componenteId    Int?
   componente      Componente? @relation(fields: [componenteId], references: [id])
   
+  foto            Foto[]
+  
   @@map("attivita")
 }
 
@@ -113,4 +115,19 @@ model Impostazioni {
   intestazionePdf   String  @db.Text @default("Report generato automaticamente")
   
   @@map("impostazioni")
+}
+
+model Foto {
+  id          Int       @id @default(autoincrement())
+  filePath    String
+  fileName    String
+  fileSize    Int
+  mimeType    String
+  caricataIl  DateTime  @default(now())
+  
+  attivitaId  Int
+  attivita    Attivita  @relation(fields: [attivitaId], references: [id], onDelete: Cascade)
+  
+  @@map("foto")
+  @@index([attivitaId])
 }

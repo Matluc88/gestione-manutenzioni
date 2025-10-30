@@ -3,11 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Save, FileText, Loader2 } from 'lucide-react';
+import FotoUpload from './FotoUpload';
 
 interface Componente {
   id: number;
   nome: string;
   predefinito: boolean;
+}
+
+interface Foto {
+  id: number;
+  filePath: string;
+  fileName: string;
 }
 
 interface Attivita {
@@ -17,11 +24,11 @@ interface Attivita {
   motivazione: string;
   note: string;
   componenteId: number | null;
+  foto: Foto[];
 }
 
 export default function ManutenzioneForm({
   impiantoId,
-  userId,
 }: {
   impiantoId: number;
   userId: number;
@@ -40,28 +47,29 @@ export default function ManutenzioneForm({
   const router = useRouter();
 
   useEffect(() => {
+    const fetchComponenti = async () => {
+      const res = await fetch(`/api/componenti?impiantoId=${impiantoId}`);
+      const data = await res.json();
+      setComponenti(data);
+    };
+
+    const createOrLoadReport = async () => {
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          impiantoId,
+          tipo: 'MANUTENZIONE',
+        }),
+      });
+      const report = await res.json();
+      setReportId(report.id);
+    };
+
     fetchComponenti();
     createOrLoadReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const fetchComponenti = async () => {
-    const res = await fetch(`/api/componenti?impiantoId=${impiantoId}`);
-    const data = await res.json();
-    setComponenti(data);
-  };
-
-  const createOrLoadReport = async () => {
-    const res = await fetch('/api/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        impiantoId,
-        tipo: 'MANUTENZIONE',
-      }),
-    });
-    const report = await res.json();
-    setReportId(report.id);
-  };
 
   const handleAddComponente = async () => {
     const res = await fetch('/api/componenti', {
@@ -80,20 +88,43 @@ export default function ManutenzioneForm({
     aggiungiAttivita(newComp.id);
   };
 
-  const aggiungiAttivita = (compId?: number) => {
+  const aggiungiAttivita = async (compId?: number) => {
+    if (!reportId) {
+      alert('Errore: nessun report attivo');
+      return;
+    }
+
+    const res = await fetch('/api/attivita', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reportId,
+        componenteId: compId || componenteSelezionato,
+        descrizione: 'Nuova attività',
+        stato: 'FATTO',
+        motivazione: null,
+        note: null,
+        ordine: attivita.length,
+      }),
+    });
+
+    const newAtt = await res.json();
+
     setAttivita([
       ...attivita,
       {
-        descrizione: '',
+        id: newAtt.id,
+        descrizione: 'Nuova attività',
         stato: 'FATTO',
         motivazione: '',
         note: '',
         componenteId: compId || componenteSelezionato,
+        foto: [],
       },
     ]);
   };
 
-  const updateAttivita = (index: number, field: string, value: any) => {
+  const updateAttivita = (index: number, field: keyof Attivita, value: string) => {
     const newAttivita = [...attivita];
     newAttivita[index] = { ...newAttivita[index], [field]: value };
     
@@ -124,19 +155,44 @@ export default function ManutenzioneForm({
         return;
       }
 
-      await fetch('/api/attivita', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reportId,
-          componenteId: att.componenteId,
-          descrizione: att.descrizione,
-          stato: att.stato,
-          motivazione: att.motivazione,
-          note: att.note,
-          ordine: i,
-        }),
-      });
+      if ((att.stato === 'FATTO' || att.stato === 'NON_FATTO') && att.foto.length === 0) {
+        alert(`Foto obbligatoria per attività: ${att.descrizione}`);
+        return;
+      }
+
+      if (att.id) {
+        await fetch('/api/attivita', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: att.id,
+            descrizione: att.descrizione,
+            stato: att.stato,
+            motivazione: att.motivazione,
+            note: att.note,
+          }),
+        });
+      } else {
+        const res = await fetch('/api/attivita', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reportId,
+            componenteId: att.componenteId,
+            descrizione: att.descrizione,
+            stato: att.stato,
+            motivazione: att.motivazione,
+            note: att.note,
+            ordine: i,
+          }),
+        });
+        
+        const newAtt = await res.json();
+        
+        const newAttivita = [...attivita];
+        newAttivita[i].id = newAtt.id;
+        setAttivita(newAttivita);
+      }
     }
   };
 
@@ -317,7 +373,7 @@ export default function ManutenzioneForm({
                 </div>
               )}
 
-              <div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Note (facoltativo)
                 </label>
@@ -329,6 +385,26 @@ export default function ManutenzioneForm({
                   rows={2}
                 />
               </div>
+
+              {att.stato !== 'NON_APPLICABILE' && (
+                <FotoUpload
+                  attivitaId={att.id || null}
+                  foto={att.foto}
+                  onFotoAdded={(foto) => {
+                    const newAttivita = [...attivita];
+                    newAttivita[index].foto.push(foto);
+                    setAttivita(newAttivita);
+                  }}
+                  onFotoRemoved={(fotoId) => {
+                    const newAttivita = [...attivita];
+                    newAttivita[index].foto = newAttivita[index].foto.filter(
+                      (f) => f.id !== fotoId
+                    );
+                    setAttivita(newAttivita);
+                  }}
+                  required={att.stato === 'FATTO' || att.stato === 'NON_FATTO'}
+                />
+              )}
             </div>
           ))}
         </div>
