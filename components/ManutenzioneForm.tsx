@@ -205,20 +205,37 @@ export default function ManutenzioneForm({
   };
 
   const handleGeneraPDF = async () => {
-    setGenerating(true);
-    await salvaAttivita();
-    
-    if (reportId) {
-      await fetch(`/api/report/${reportId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stato: 'COMPLETATO' }),
-      });
+    if (!reportId) {
+      alert('Errore: nessun report attivo');
+      return;
     }
+
+    setGenerating(true);
     
-    setGenerating(false);
-    alert('Report completato! (Generazione PDF disponibile in Fase 5)');
-    router.push('/dashboard');
+    try {
+      await salvaAttivita();
+
+      const res = await fetch(`/api/report/${reportId}/pdf`, {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Errore generazione PDF');
+      }
+
+      alert('✅ Report completato e PDF generato con successo!');
+      
+      window.open(`/api/report/${reportId}/pdf`, '_blank');
+      
+      router.push('/dashboard');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      alert(`Errore: ${errorMessage}`);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (

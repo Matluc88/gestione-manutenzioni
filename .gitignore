@@ -45,3 +45,7 @@ next-env.d.ts
 # Uploads
 public/uploads/*
 !public/uploads/.gitkeep
+
+# PDF generati
+public/pdf/*
+!public/pdf/.gitkeep
