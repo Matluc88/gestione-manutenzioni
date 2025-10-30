@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Utente {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique @db.VarChar(50)
+  passwordHash  String
+  ruolo         Ruolo     @default(COLLABORATORE)
+  attivo        Boolean   @default(true)
+  creatoIl      DateTime  @default(now())
+  
+  impiantiCreati Impianto[]
+  report         Report[]
+  
+  @@map("utenti")
+}
+
+enum Ruolo {
+  ADMIN
+  COLLABORATORE
+}
+
+model Impianto {
+  id          Int       @id @default(autoincrement())
+  nome        String    @db.VarChar(100)
+  proprieta   String?   @db.VarChar(100)
+  creatoIl    DateTime  @default(now())
+  
+  creatoId    Int
+  creatoUtente Utente   @relation(fields: [creatoId], references: [id])
+  
+  report       Report[]
+  componenti   Componente[]
+  
+  @@map("impianti")
+}
+
+model Report {
+  id            Int       @id @default(autoincrement())
+  codice        String    @unique @db.VarChar(20)
+  tipo          TipoReport
+  stato         StatoReport @default(BOZZA)
+  pdfPath       String?
+  creatoIl      DateTime  @default(now())
+  modificatoIl  DateTime  @updatedAt
+  
+  impiantoId    Int
+  impianto      Impianto  @relation(fields: [impiantoId], references: [id])
+  utenteId      Int
+  utente        Utente    @relation(fields: [utenteId], references: [id])
+  attivita      Attivita[]
+  
+  @@map("report")
+  @@index([codice, stato, creatoIl])
+}
+
+enum TipoReport {
+  MANUTENZIONE
+  INTERVENTO
+}
+
+enum StatoReport {
+  BOZZA
+  COMPLETATO
+}
+
+model Componente {
+  id            Int       @id @default(autoincrement())
+  nome          String    @db.VarChar(100)
+  predefinito   Boolean   @default(false)
+  
+  impiantoId    Int?
+  impianto      Impianto? @relation(fields: [impiantoId], references: [id])
+  attivita      Attivita[]
+  
+  @@map("componenti")
+}
+
+model Attivita {
+  id              Int       @id @default(autoincrement())
+  descrizione     String    @db.Text
+  stato           StatoAttivita
+  motivazione     String?   @db.Text
+  note            String?   @db.Text
+  ordine          Int       @default(0)
+  
+  reportId        Int
+  report          Report    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  componenteId    Int?
+  componente      Componente? @relation(fields: [componenteId], references: [id])
+  
+  @@map("attivita")
+}
+
+enum StatoAttivita {
+  FATTO
+  NON_FATTO
+  NON_APPLICABILE
+}
+
+model Impostazioni {
+  id                Int     @id @default(1)
+  nomeAzienda       String  @default("Angelo S.r.l.")
+  telefono          String?
+  email             String?
+  logoPath          String?
+  intestazionePdf   String  @db.Text @default("Report generato automaticamente")
+  
+  @@map("impostazioni")
+}
