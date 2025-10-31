@@ -75,8 +75,8 @@ export default function UtentiTab() {
 
       setUtenti(utenti.filter((u) => u.id !== utente.id));
       alert('✅ Utente eliminato con successo');
-    } catch (error: any) {
-      alert(`❌ ${error.message}`);
+    } catch (error) {
+      alert(`❌ ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
       setDeletingId(null);
     }
@@ -114,8 +114,8 @@ export default function UtentiTab() {
       const updated = await res.json();
       setUtenti(utenti.map((u) => (u.id === updated.id ? updated : u)));
       alert(`✅ Utente ${action}to con successo`);
-    } catch (error: any) {
-      alert(`❌ ${error.message}`);
+    } catch (error) {
+      alert(`❌ ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     }
   };
 

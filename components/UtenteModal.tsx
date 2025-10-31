@@ -78,7 +78,13 @@ export default function UtenteModal({ utente, onClose, onSuccess }: UtenteModalP
       const url = isEdit ? `/api/utenti/${utente.id}` : '/api/utenti';
       const method = isEdit ? 'PUT' : 'POST';
 
-      const body: any = {
+      const body: {
+        username: string;
+        ruolo: string;
+        attivo: boolean;
+        password?: string;
+        newPassword?: string;
+      } = {
         username: formData.username.trim(),
         ruolo: formData.ruolo,
         attivo: formData.attivo,
@@ -102,8 +108,8 @@ export default function UtenteModal({ utente, onClose, onSuccess }: UtenteModalP
       }
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore sconosciuto');
     } finally {
       setLoading(false);
     }

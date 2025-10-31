@@ -75,7 +75,12 @@ export async function PUT(
       );
     }
 
-    const updateData: any = {
+    const updateData: {
+      username: string;
+      ruolo: string;
+      attivo: boolean;
+      passwordHash?: string;
+    } = {
       username: username.trim(),
       ruolo,
       attivo: attivo !== undefined ? attivo : existingUser.attivo,
