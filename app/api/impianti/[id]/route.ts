@@ -5,15 +5,16 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
   }
 
+  const { id } = await params;
   const impianto = await prisma.impianto.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     include: {
       creatoUtente: {
         select: { username: true },
@@ -30,7 +31,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -40,8 +41,9 @@ export async function PUT(
   const body = await req.json();
   const { nome, proprieta } = body;
 
+  const { id } = await params;
   const impianto = await prisma.impianto.update({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     data: {
       nome,
       proprieta: proprieta || null,
@@ -53,15 +55,16 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session || session.user.ruolo !== 'ADMIN') {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
   }
 
+  const { id } = await params;
   await prisma.impianto.delete({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
   });
 
   return NextResponse.json({ success: true });

@@ -7,15 +7,16 @@ import path from 'path';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
   }
 
+  const { id } = await params;
   const report = await prisma.report.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     include: {
       impianto: true,
       utente: {
@@ -40,7 +41,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -50,8 +51,9 @@ export async function PUT(
   const body = await req.json();
   const { stato } = body;
 
+  const { id } = await params;
   const report = await prisma.report.update({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     data: { stato },
   });
 
@@ -60,7 +62,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -72,7 +74,8 @@ export async function DELETE(
   }
 
   try {
-    const reportId = parseInt(params.id);
+    const { id } = await params;
+    const reportId = parseInt(id);
 
     const report = await prisma.report.findUnique({
       where: { id: reportId },

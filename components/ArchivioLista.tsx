@@ -34,7 +34,7 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
     window.open(`/api/report/${reportId}/pdf`, '_blank');
   };
 
-  const handleEdit = () => {
+  const handleEdit = (reportId: number) => {
     alert('Funzionalità modifica bozza in sviluppo');
   };
 
