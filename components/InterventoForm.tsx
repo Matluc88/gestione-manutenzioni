@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Save, FileText, Loader2 } from 'lucide-react';
+import { Plus, Save, FileText, Loader2, Trash2 } from 'lucide-react';
 import FotoUpload from './FotoUpload';
-
-interface Componente {
-  id: number;
-  nome: string;
-  predefinito: boolean;
-}
 
 interface Foto {
   id: number;
@@ -23,21 +17,15 @@ interface Attivita {
   stato: 'FATTO' | 'NON_FATTO' | 'NON_APPLICABILE';
   motivazione: string;
   note: string;
-  componenteId: number | null;
   foto: Foto[];
 }
 
-export default function ManutenzioneForm({
+export default function InterventoForm({
   impiantoId,
 }: {
   impiantoId: number;
   userId: number;
 }) {
-  const [componenti, setComponenti] = useState<Componente[]>([]);
-  const [componenteSelezionato, setComponenteSelezionato] = useState<number | null>(null);
-  const [showNewComponente, setShowNewComponente] = useState(false);
-  const [newComponenteNome, setNewComponenteNome] = useState('');
-  
   const [attivita, setAttivita] = useState<Attivita[]>([]);
   const [reportId, setReportId] = useState<number | null>(null);
   
@@ -47,78 +35,30 @@ export default function ManutenzioneForm({
   const router = useRouter();
 
   useEffect(() => {
-    const fetchComponenti = async () => {
-      const res = await fetch(`/api/componenti?impiantoId=${impiantoId}`);
-      const data = await res.json();
-      setComponenti(data);
-    };
-
     const createOrLoadReport = async () => {
       const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           impiantoId,
-          tipo: 'MANUTENZIONE',
+          tipo: 'INTERVENTO',
         }),
       });
       const report = await res.json();
       setReportId(report.id);
     };
 
-    fetchComponenti();
     createOrLoadReport();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [impiantoId]);
 
-  const handleAddComponente = async () => {
-    const res = await fetch('/api/componenti', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nome: newComponenteNome,
-        impiantoId,
-      }),
-    });
-    const newComp = await res.json();
-    setComponenti([...componenti, newComp]);
-    setComponenteSelezionato(newComp.id);
-    setNewComponenteNome('');
-    setShowNewComponente(false);
-    aggiungiAttivita(newComp.id);
-  };
-
-  const aggiungiAttivita = async (compId?: number) => {
-    if (!reportId) {
-      alert('Errore: nessun report attivo');
-      return;
-    }
-
-    const res = await fetch('/api/attivita', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reportId,
-        componenteId: compId || componenteSelezionato,
-        descrizione: 'Nuova attività',
-        stato: 'FATTO',
-        motivazione: null,
-        note: null,
-        ordine: attivita.length,
-      }),
-    });
-
-    const newAtt = await res.json();
-
+  const aggiungiAttivita = () => {
     setAttivita([
       ...attivita,
       {
-        id: newAtt.id,
-        descrizione: 'Nuova attività',
+        descrizione: '',
         stato: 'FATTO',
         motivazione: '',
         note: '',
-        componenteId: compId || componenteSelezionato,
         foto: [],
       },
     ]);
@@ -178,7 +118,7 @@ export default function ManutenzioneForm({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             reportId,
-            componenteId: att.componenteId,
+            componenteId: null,
             descrizione: att.descrizione,
             stato: att.stato,
             motivazione: att.motivazione,
@@ -205,6 +145,11 @@ export default function ManutenzioneForm({
   };
 
   const handleGeneraPDF = async () => {
+    if (attivita.length === 0) {
+      alert('Inserisci almeno un\'attività prima di generare il PDF');
+      return;
+    }
+
     setGenerating(true);
     await salvaAttivita();
     
@@ -224,71 +169,20 @@ export default function ManutenzioneForm({
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-xl font-bold mb-4">Seleziona componente</h2>
+        <h2 className="text-xl font-bold mb-4">Attività intervento</h2>
         
-        <div className="flex gap-4 mb-4">
-          <select
-            value={componenteSelezionato || ''}
-            onChange={(e) => setComponenteSelezionato(parseInt(e.target.value))}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">-- Scegli componente --</option>
-            {componenti.map((comp) => (
-              <option key={comp.id} value={comp.id}>
-                {comp.nome} {comp.predefinito ? '' : '(Custom)'}
-              </option>
-            ))}
-          </select>
-          
-          <button
-            onClick={() => setShowNewComponente(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-          >
-            <Plus size={20} />
-            Nuovo componente
-          </button>
-        </div>
-
-        {showNewComponente && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <input
-              type="text"
-              placeholder="Nome componente..."
-              value={newComponenteNome}
-              onChange={(e) => setNewComponenteNome(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowNewComponente(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white"
-              >
-                Annulla
-              </button>
-              <button
-                onClick={handleAddComponente}
-                disabled={!newComponenteNome}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-              >
-                Aggiungi
-              </button>
-            </div>
-          </div>
-        )}
-
         <button
-          onClick={() => aggiungiAttivita()}
-          disabled={!componenteSelezionato}
-          className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+          onClick={aggiungiAttivita}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
           <Plus size={20} />
-          Aggiungi attività
+          Inserisci attività
         </button>
       </div>
 
       {attivita.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold">Attività</h2>
+          <h2 className="text-xl font-bold">Attività ({attivita.length})</h2>
           
           {attivita.map((att, index) => (
             <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
@@ -296,22 +190,23 @@ export default function ManutenzioneForm({
                 <h3 className="font-semibold text-lg">Attività {index + 1}</h3>
                 <button
                   onClick={() => removeAttivita(index)}
-                  className="text-red-600 hover:text-red-800 text-sm"
+                  className="text-red-600 hover:text-red-800 flex items-center gap-1"
                 >
+                  <Trash2 size={18} />
                   Rimuovi
                 </button>
               </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descrizione attività *
+                  Descrizione intervento *
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={att.descrizione}
                   onChange={(e) => updateAttivita(index, 'descrizione', e.target.value)}
-                  placeholder="Es: Controllo cablaggi, Pulizia filtri..."
+                  placeholder="Descrivi l'intervento effettuato..."
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={3}
                   required
                 />
               </div>
@@ -365,7 +260,7 @@ export default function ManutenzioneForm({
                   <textarea
                     value={att.motivazione}
                     onChange={(e) => updateAttivita(index, 'motivazione', e.target.value)}
-                    placeholder="Spiega perché l'attività non è stata completata..."
+                    placeholder="Spiega perché l'intervento non è stato completato..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     rows={3}
                     required
@@ -380,7 +275,7 @@ export default function ManutenzioneForm({
                 <textarea
                   value={att.note}
                   onChange={(e) => updateAttivita(index, 'note', e.target.value)}
-                  placeholder="Note aggiuntive..."
+                  placeholder="Note aggiuntive sull'intervento..."
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   rows={2}
                 />
@@ -427,7 +322,7 @@ export default function ManutenzioneForm({
             className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition shadow-lg"
           >
             {generating ? <Loader2 className="animate-spin" /> : <FileText size={20} />}
-            Genera report PDF
+            Fine attività → Genera PDF
           </button>
         </div>
       )}
