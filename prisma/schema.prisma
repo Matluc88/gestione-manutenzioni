@@ -58,6 +58,11 @@ model Report {
   
   @@map("report")
   @@index([codice, stato, creatoIl])
+  @@index([impiantoId])
+  @@index([utenteId])
+  @@index([stato])
+  @@index([tipo])
+  @@index([creatoIl])
 }
 
 enum TipoReport {
@@ -98,6 +103,8 @@ model Attivita {
   foto            Foto[]
   
   @@map("attivita")
+  @@index([reportId])
+  @@index([componenteId])
 }
 
 enum StatoAttivita {
@@ -109,6 +116,7 @@ enum StatoAttivita {
 model Impostazioni {
   id                Int     @id @default(1)
   nomeAzienda       String  @default("Angelo S.r.l.")
+  indirizzo         String?
   telefono          String?
   email             String?
   logoPath          String?
