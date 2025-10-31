@@ -88,11 +88,11 @@ export async function generateReportPDF(
         }
       }
 
-      doc.fontSize(20).font('Helvetica-Bold').text(impostazioni.nomeAzienda, 50, yPosition);
+  doc.fontSize(20).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(impostazioni.nomeAzienda, 50, yPosition);
       yPosition += 25;
 
       if (impostazioni.indirizzo) {
-        doc.fontSize(10).font('Helvetica').text(impostazioni.indirizzo, 50, yPosition);
+        doc.fontSize(10).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(impostazioni.indirizzo, 50, yPosition);
         yPosition += 15;
       }
 
@@ -100,14 +100,14 @@ export async function generateReportPDF(
       if (impostazioni.telefono) contactInfo.push(`Tel: ${impostazioni.telefono}`);
       if (impostazioni.email) contactInfo.push(`Email: ${impostazioni.email}`);
       if (contactInfo.length > 0) {
-        doc.fontSize(10).text(contactInfo.join(' • '), 50, yPosition);
+        doc.fontSize(10).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(contactInfo.join(' • '), 50, yPosition);
         yPosition += 20;
       }
 
       doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
       yPosition += 30;
 
-      doc.fontSize(18).font('Helvetica-Bold').text(
+  doc.fontSize(18).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(
         report.tipo === 'MANUTENZIONE' ? 'REPORT MANUTENZIONE ORDINARIA' : 'REPORT INTERVENTO TECNICO',
         50,
         yPosition,
@@ -115,11 +115,11 @@ export async function generateReportPDF(
       );
       yPosition += 30;
 
-      doc.fontSize(12).font('Helvetica-Bold').text(`Codice Report: ${report.codice}`, 50, yPosition);
+  doc.fontSize(12).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(`Codice Report: ${report.codice}`, 50, yPosition);
       yPosition += 20;
 
-      doc.fontSize(10).font('Helvetica');
-      doc.text(`Data: ${new Date(report.creatoIl).toLocaleDateString('it-IT', {
+  doc.fontSize(10).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf'));
+  doc.text(`Data: ${new Date(report.creatoIl).toLocaleDateString('it-IT', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -128,10 +128,10 @@ export async function generateReportPDF(
       })}`, 50, yPosition);
       yPosition += 15;
 
-      doc.text(`Operatore: ${report.utente.username}`, 50, yPosition);
+  doc.text(`Operatore: ${report.utente.username}`, 50, yPosition);
       yPosition += 15;
 
-      doc.text(`Impianto: ${report.impianto.nome}`, 50, yPosition);
+  doc.text(`Impianto: ${report.impianto.nome}`, 50, yPosition);
       yPosition += 15;
 
       if (report.impianto.proprieta) {
@@ -143,11 +143,11 @@ export async function generateReportPDF(
       doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
       yPosition += 20;
 
-      doc.fontSize(14).font('Helvetica-Bold').text('ATTIVITÀ', 50, yPosition);
+  doc.fontSize(14).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text('ATTIVITÀ', 50, yPosition);
       yPosition += 20;
 
       if (report.attivita.length === 0) {
-        doc.fontSize(10).font('Helvetica-Oblique').text('Nessuna attività registrata', 50, yPosition);
+        doc.fontSize(10).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text('Nessuna attività registrata', 50, yPosition);
       } else {
         report.attivita.forEach((att, index) => {
           if (yPosition > 700) {
@@ -156,7 +156,7 @@ export async function generateReportPDF(
           }
 
           console.log(`[PDF] Attività ${index + 1}:`, JSON.stringify(att));
-          doc.fontSize(11).font('Helvetica-Bold').text(
+          doc.fontSize(11).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(
             `${index + 1}. ${att.descrizione}`,
             50,
             yPosition,
@@ -165,7 +165,7 @@ export async function generateReportPDF(
           yPosition += 20;
 
           if (att.componente) {
-            doc.fontSize(9).font('Helvetica').text(
+            doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(
               `Componente: ${att.componente.nome}`,
               70,
               yPosition
@@ -180,26 +180,26 @@ export async function generateReportPDF(
                             att.stato === 'NON_FATTO' ? '#ef4444' : 
                             '#6b7280';
 
-          doc.fontSize(9).fillColor(statoColor).text(`Stato: ${statoLabel}`, 70, yPosition);
+          doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).fillColor(statoColor).text(`Stato: ${statoLabel}`, 70, yPosition);
           doc.fillColor('#000000');
           yPosition += 15;
 
           if (att.motivazione) {
-            doc.fontSize(9).font('Helvetica-Bold').text('Motivazione:', 70, yPosition);
+            doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text('Motivazione:', 70, yPosition);
             yPosition += 12;
-            doc.fontSize(9).font('Helvetica').text(att.motivazione, 70, yPosition, { width: 475 });
+            doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(att.motivazione, 70, yPosition, { width: 475 });
             yPosition += Math.ceil(att.motivazione.length / 80) * 12 + 5;
           }
 
           if (att.note) {
-            doc.fontSize(9).font('Helvetica-Bold').text('Note:', 70, yPosition);
+            doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text('Note:', 70, yPosition);
             yPosition += 12;
-            doc.fontSize(9).font('Helvetica').text(att.note, 70, yPosition, { width: 475 });
+            doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(att.note, 70, yPosition, { width: 475 });
             yPosition += Math.ceil(att.note.length / 80) * 12 + 5;
           }
 
           if (att.foto.length > 0) {
-            doc.fontSize(9).font('Helvetica-Bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
+            doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(`Foto (${att.foto.length}):`, 70, yPosition);
             yPosition += 15;
 
             att.foto.forEach((foto) => {
@@ -213,11 +213,11 @@ export async function generateReportPDF(
                   }
 
                   doc.image(fotoFullPath, 70, yPosition, { width: 200, height: 150, fit: [200, 150] });
-                  doc.fontSize(8).font('Helvetica').text(foto.fileName, 70, yPosition + 155, { width: 200 });
+                  doc.fontSize(8).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(foto.fileName, 70, yPosition + 155, { width: 200 });
                   yPosition += 175;
                 } catch (err) {
                   console.error(`Errore caricamento foto ${foto.fileName}:`, err);
-                  doc.fontSize(8).font('Helvetica-Oblique').text(
+                  doc.fontSize(8).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(
                     `[Foto non disponibile: ${foto.fileName}]`,
                     70,
                     yPosition
@@ -245,7 +245,7 @@ export async function generateReportPDF(
       }
 
       yPosition += 20;
-      doc.fontSize(9).font('Helvetica-Oblique').text(
+      doc.fontSize(9).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(
         impostazioni.intestazionePdf,
         50,
         yPosition,
@@ -255,7 +255,7 @@ export async function generateReportPDF(
       const pageCount = doc.bufferedPageRange().count;
       for (let i = 0; i < pageCount; i++) {
         doc.switchToPage(i);
-        doc.fontSize(8).font('Helvetica').text(
+  doc.fontSize(8).font(path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf')).text(
           `Pagina ${i + 1} di ${pageCount}`,
           50,
           doc.page.height - 50,
