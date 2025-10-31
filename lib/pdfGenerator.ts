@@ -60,10 +60,14 @@ export async function generateReportPDF(
       const filePath = path.join(pdfDir, fileName);
       const relativePath = `pdf/${fileName}`;
 
+      const fontRegular = path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Regular.ttf');
+      const fontBold = path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Bold.ttf');
+
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
       const stream = fs.createWriteStream(filePath);
 
       doc.pipe(stream);
+      doc.font(fontRegular);
 
       let yPosition = 50;
 
@@ -80,11 +84,11 @@ export async function generateReportPDF(
         }
       }
 
-      doc.fontSize(20).font('Helvetica-Bold').text(impostazioni.nomeAzienda, 50, yPosition);
+      doc.fontSize(20).font(fontBold).text(impostazioni.nomeAzienda, 50, yPosition);
       yPosition += 25;
 
       if (impostazioni.indirizzo) {
-        doc.fontSize(10).font('Helvetica').text(impostazioni.indirizzo, 50, yPosition);
+        doc.fontSize(10).font(fontRegular).text(impostazioni.indirizzo, 50, yPosition);
         yPosition += 15;
       }
 
@@ -99,7 +103,7 @@ export async function generateReportPDF(
       doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
       yPosition += 30;
 
-      doc.fontSize(18).font('Helvetica-Bold').text(
+      doc.fontSize(18).font(fontBold).text(
         report.tipo === 'MANUTENZIONE' ? 'REPORT MANUTENZIONE ORDINARIA' : 'REPORT INTERVENTO TECNICO',
         50,
         yPosition,
@@ -107,10 +111,10 @@ export async function generateReportPDF(
       );
       yPosition += 30;
 
-      doc.fontSize(12).font('Helvetica-Bold').text(`Codice Report: ${report.codice}`, 50, yPosition);
+      doc.fontSize(12).font(fontBold).text(`Codice Report: ${report.codice}`, 50, yPosition);
       yPosition += 20;
 
-      doc.fontSize(10).font('Helvetica');
+      doc.fontSize(10).font(fontRegular);
       doc.text(`Data: ${new Date(report.creatoIl).toLocaleDateString('it-IT', {
         day: '2-digit',
         month: '2-digit',
@@ -135,11 +139,11 @@ export async function generateReportPDF(
       doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
       yPosition += 20;
 
-      doc.fontSize(14).font('Helvetica-Bold').text('ATTIVITÀ', 50, yPosition);
+      doc.fontSize(14).font(fontBold).text('ATTIVITÀ', 50, yPosition);
       yPosition += 20;
 
       if (report.attivita.length === 0) {
-        doc.fontSize(10).font('Helvetica-Oblique').text('Nessuna attività registrata', 50, yPosition);
+        doc.fontSize(10).font(fontRegular).text('Nessuna attività registrata', 50, yPosition);
       } else {
         report.attivita.forEach((att, index) => {
           if (yPosition > 700) {
@@ -147,7 +151,7 @@ export async function generateReportPDF(
             yPosition = 50;
           }
 
-          doc.fontSize(11).font('Helvetica-Bold').text(
+          doc.fontSize(11).font(fontBold).text(
             `${index + 1}. ${att.descrizione}`,
             50,
             yPosition,
@@ -156,7 +160,7 @@ export async function generateReportPDF(
           yPosition += 20;
 
           if (att.componente) {
-            doc.fontSize(9).font('Helvetica').text(
+            doc.fontSize(9).font(fontRegular).text(
               `Componente: ${att.componente.nome}`,
               70,
               yPosition
@@ -176,21 +180,21 @@ export async function generateReportPDF(
           yPosition += 15;
 
           if (att.motivazione) {
-            doc.fontSize(9).font('Helvetica-Bold').text('Motivazione:', 70, yPosition);
+            doc.fontSize(9).font(fontBold).text('Motivazione:', 70, yPosition);
             yPosition += 12;
-            doc.fontSize(9).font('Helvetica').text(att.motivazione, 70, yPosition, { width: 475 });
+            doc.fontSize(9).font(fontRegular).text(att.motivazione, 70, yPosition, { width: 475 });
             yPosition += Math.ceil(att.motivazione.length / 80) * 12 + 5;
           }
 
           if (att.note) {
-            doc.fontSize(9).font('Helvetica-Bold').text('Note:', 70, yPosition);
+            doc.fontSize(9).font(fontBold).text('Note:', 70, yPosition);
             yPosition += 12;
-            doc.fontSize(9).font('Helvetica').text(att.note, 70, yPosition, { width: 475 });
+            doc.fontSize(9).font(fontRegular).text(att.note, 70, yPosition, { width: 475 });
             yPosition += Math.ceil(att.note.length / 80) * 12 + 5;
           }
 
           if (att.foto.length > 0) {
-            doc.fontSize(9).font('Helvetica-Bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
+            doc.fontSize(9).font(fontBold).text(`Foto (${att.foto.length}):`, 70, yPosition);
             yPosition += 15;
 
             att.foto.forEach((foto) => {
@@ -203,11 +207,11 @@ export async function generateReportPDF(
                   }
 
                   doc.image(fotoFullPath, 70, yPosition, { width: 200, height: 150, fit: [200, 150] });
-                  doc.fontSize(8).font('Helvetica').text(foto.fileName, 70, yPosition + 155, { width: 200 });
+                  doc.fontSize(8).font(fontRegular).text(foto.fileName, 70, yPosition + 155, { width: 200 });
                   yPosition += 175;
                 } catch (err) {
                   console.error(`Errore caricamento foto ${foto.fileName}:`, err);
-                  doc.fontSize(8).font('Helvetica-Oblique').text(
+                  doc.fontSize(8).font(fontRegular).text(
                     `[Foto non disponibile: ${foto.fileName}]`,
                     70,
                     yPosition
@@ -233,7 +237,7 @@ export async function generateReportPDF(
       }
 
       yPosition += 20;
-      doc.fontSize(9).font('Helvetica-Oblique').text(
+      doc.fontSize(9).font(fontRegular).text(
         impostazioni.intestazionePdf,
         50,
         yPosition,
@@ -243,7 +247,7 @@ export async function generateReportPDF(
       const pageCount = doc.bufferedPageRange().count;
       for (let i = 0; i < pageCount; i++) {
         doc.switchToPage(i);
-        doc.fontSize(8).font('Helvetica').text(
+        doc.fontSize(8).font(fontRegular).text(
           `Pagina ${i + 1} di ${pageCount}`,
           50,
           doc.page.height - 50,
