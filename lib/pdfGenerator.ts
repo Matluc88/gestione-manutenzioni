@@ -58,7 +58,7 @@ export async function generateReportPDF(
 
       const fileName = `${report.codice}.pdf`;
       const filePath = path.join(pdfDir, fileName);
-      const relativePath = `/pdf/${fileName}`;
+      const relativePath = `pdf/${fileName}`;
 
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
       const stream = fs.createWriteStream(filePath);

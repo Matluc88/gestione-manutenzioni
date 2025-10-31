@@ -6,6 +6,10 @@ import { generateReportPDF } from '@/lib/pdfGenerator';
 import fs from 'fs';
 import path from 'path';
 
+export const runtime = 'nodejs';
+
+const normalizePath = (p: string) => (p.startsWith('/') ? p.slice(1) : p);
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -54,7 +58,8 @@ export async function GET(
 
     let pdfPath = report.pdfPath;
 
-    if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', pdfPath))) {
+    const relPath = pdfPath ? normalizePath(pdfPath) : null;
+    if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', relPath!))) {
       const reportForPDF = {
         ...report,
         creatoIl: report.creatoIl.toISOString(),
@@ -68,7 +73,8 @@ export async function GET(
       });
     }
 
-    const pdfFullPath = path.join(process.cwd(), 'public', pdfPath);
+    const finalRelPath = normalizePath(pdfPath);
+    const pdfFullPath = path.join(process.cwd(), 'public', finalRelPath);
 
     if (!fs.existsSync(pdfFullPath)) {
       return NextResponse.json({ error: 'PDF non trovato' }, { status: 404 });
