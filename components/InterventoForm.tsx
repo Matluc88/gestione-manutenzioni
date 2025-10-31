@@ -199,9 +199,17 @@ export default function InterventoForm({
   const handleSalvaBozza = async () => {
     setSaving(true);
     await salvaAttivita();
+    
+    if (reportId) {
+      await fetch(`/api/report/${reportId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stato: 'IN_LAVORAZIONE' }),
+      });
+    }
+    
     setSaving(false);
-    alert('Bozza salvata con successo!');
-    router.push('/dashboard');
+    alert('✅ Bozza salvata con successo!');
   };
 
   const handleGeneraPDF = async () => {
@@ -217,8 +225,8 @@ export default function InterventoForm({
     }
     
     setGenerating(false);
-    alert('Report completato! (Generazione PDF disponibile in Fase 5)');
-    router.push('/dashboard');
+    alert('Report completato! Puoi scaricarlo dall\'archivio.');
+    router.push('/archivio/intervento');
   };
 
   return (

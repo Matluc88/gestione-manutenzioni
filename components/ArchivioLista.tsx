@@ -11,6 +11,7 @@ interface Report {
   pdfPath: string | null;
   creatoIl: string;
   numAttivita: number;
+  impiantoId: number;
   impianto: {
     nome: string;
     proprieta: string | null;
@@ -34,8 +35,9 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
     window.open(`/api/report/${reportId}/pdf`, '_blank');
   };
 
-  const handleEdit = (reportId: number) => {
-    alert('Funzionalità modifica bozza in sviluppo');
+  const handleEdit = (reportId: number, tipo: string, impiantoId: number) => {
+    const tipoPath = tipo === 'MANUTENZIONE' ? 'manutenzione' : 'intervento';
+    window.location.href = `/${tipoPath}/${impiantoId}?reportId=${reportId}`;
   };
 
   const handleDelete = async (reportId: number) => {
@@ -109,11 +111,13 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
                   className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                     r.stato === 'COMPLETATO'
                       ? 'bg-green-100 text-green-700'
+                      : r.stato === 'IN_LAVORAZIONE'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'bg-yellow-100 text-yellow-700'
                   }`}
                 >
-                  {r.stato === 'COMPLETATO' ? '✅' : '🟡'}
-                  {r.stato === 'COMPLETATO' ? 'Completato' : 'Bozza'}
+                  {r.stato === 'COMPLETATO' ? '✅' : r.stato === 'IN_LAVORAZIONE' ? '🔄' : '🟡'}
+                  {r.stato === 'COMPLETATO' ? 'Completato' : r.stato === 'IN_LAVORAZIONE' ? 'In Lavorazione' : 'Bozza'}
                 </span>
               </div>
 
@@ -162,7 +166,7 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
                 <span className="text-sm font-medium md:hidden lg:inline">Visualizza</span>
               </button>
 
-              {r.stato === 'COMPLETATO' && r.pdfPath && (
+              {r.stato === 'COMPLETATO' && (
                 <button
                   onClick={() => handleDownload(r.id)}
                   className="flex items-center justify-center gap-2 px-3 py-2 text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition"
@@ -173,9 +177,9 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
                 </button>
               )}
 
-              {r.stato === 'BOZZA' && (
+              {(r.stato === 'BOZZA' || r.stato === 'IN_LAVORAZIONE') && (
                 <button
-                  onClick={() => handleEdit(r.id)}
+                  onClick={() => handleEdit(r.id, r.tipo, r.impiantoId)}
                   className="flex items-center justify-center gap-2 px-3 py-2 text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition"
                   title="Modifica bozza"
                 >

@@ -46,8 +46,8 @@ export async function GET(req: NextRequest) {
     where.tipo = tipo;
   }
 
-  if (stato && (stato === 'BOZZA' || stato === 'COMPLETATO')) {
-    where.stato = stato;
+  if (stato && (stato === 'BOZZA' || stato === 'IN_LAVORAZIONE' || stato === 'COMPLETATO')) {
+    where.stato = stato as 'BOZZA' | 'IN_LAVORAZIONE' | 'COMPLETATO';
   }
 
   if (dataInizio || dataFine) {
@@ -94,6 +94,7 @@ export async function GET(req: NextRequest) {
         pdfPath: r.pdfPath,
         creatoIl: r.creatoIl,
         modificatoIl: r.modificatoIl,
+        impiantoId: r.impiantoId,
         impianto: r.impianto,
         utente: r.utente,
         numAttivita: r.attivita.length,

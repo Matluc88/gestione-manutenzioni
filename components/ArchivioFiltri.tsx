@@ -28,9 +28,10 @@ interface ArchivioFiltriProps {
   filtri: FiltriValues;
   onChange: (filtri: FiltriValues) => void;
   isAdmin: boolean;
+  hideTipoFilter?: boolean;
 }
 
-export default function ArchivioFiltri({ filtri, onChange, isAdmin }: ArchivioFiltriProps) {
+export default function ArchivioFiltri({ filtri, onChange, isAdmin, hideTipoFilter = false }: ArchivioFiltriProps) {
   const [impianti, setImpianti] = useState<Impianto[]>([]);
   const [utenti, setUtenti] = useState<Utente[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -162,20 +163,22 @@ export default function ArchivioFiltri({ filtri, onChange, isAdmin }: ArchivioFi
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo report
-                </label>
-                <select
-                  value={filtri.tipo}
-                  onChange={(e) => updateFiltro('tipo', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Tutti i tipi</option>
-                  <option value="MANUTENZIONE">🔧 Manutenzione</option>
-                  <option value="INTERVENTO">🧰 Intervento</option>
-                </select>
-              </div>
+              {!hideTipoFilter && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo report
+                  </label>
+                  <select
+                    value={filtri.tipo}
+                    onChange={(e) => updateFiltro('tipo', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Tutti i tipi</option>
+                    <option value="MANUTENZIONE">🔧 Manutenzione</option>
+                    <option value="INTERVENTO">🧰 Intervento</option>
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -188,6 +191,7 @@ export default function ArchivioFiltri({ filtri, onChange, isAdmin }: ArchivioFi
                 >
                   <option value="">Tutti gli stati</option>
                   <option value="BOZZA">🟡 Bozza</option>
+                  <option value="IN_LAVORAZIONE">🔄 In Lavorazione</option>
                   <option value="COMPLETATO">✅ Completato</option>
                 </select>
               </div>

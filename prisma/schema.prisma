@@ -72,6 +72,7 @@ enum TipoReport {
 
 enum StatoReport {
   BOZZA
+  IN_LAVORAZIONE
   COMPLETATO
 }
 
