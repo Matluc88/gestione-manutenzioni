@@ -45,3 +45,7 @@ next-env.d.ts
 # Uploads
 public/uploads/*
 !public/uploads/.gitkeep
+
+# Logo aziendale
+public/logo/*
+!public/logo/.gitkeep
