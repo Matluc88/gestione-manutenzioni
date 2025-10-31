@@ -53,12 +53,17 @@ export async function generateReportPDF(
     try {
       const pdfDir = path.join(process.cwd(), 'public', 'pdf');
       if (!fs.existsSync(pdfDir)) {
+        console.log('[PDF] La cartella pdf non esiste, la creo:', pdfDir);
         fs.mkdirSync(pdfDir, { recursive: true });
       }
 
       const fileName = `${report.codice}.pdf`;
       const filePath = path.join(pdfDir, fileName);
       const relativePath = `/pdf/${fileName}`;
+
+      console.log('[PDF] Path file:', filePath);
+      console.log('[PDF] Dati report:', JSON.stringify(report));
+      console.log('[PDF] Dati impostazioni:', JSON.stringify(impostazioni));
 
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
       const stream = fs.createWriteStream(filePath);
@@ -69,6 +74,7 @@ export async function generateReportPDF(
 
       if (impostazioni.logoPath) {
         const logoFullPath = path.join(process.cwd(), 'public', impostazioni.logoPath);
+        console.log('[PDF] Path logo:', logoFullPath);
         if (fs.existsSync(logoFullPath)) {
           try {
             doc.image(logoFullPath, 50, yPosition, { width: 100 });
@@ -77,6 +83,8 @@ export async function generateReportPDF(
             console.error('Errore caricamento logo:', err);
             yPosition += 20;
           }
+        } else {
+          console.warn('[PDF] Logo non trovato:', logoFullPath);
         }
       }
 
@@ -147,6 +155,7 @@ export async function generateReportPDF(
             yPosition = 50;
           }
 
+          console.log(`[PDF] Attività ${index + 1}:`, JSON.stringify(att));
           doc.fontSize(11).font('Helvetica-Bold').text(
             `${index + 1}. ${att.descrizione}`,
             50,
@@ -195,6 +204,7 @@ export async function generateReportPDF(
 
             att.foto.forEach((foto) => {
               const fotoFullPath = path.join(process.cwd(), 'public', foto.filePath);
+              console.log(`[PDF] Path foto:`, fotoFullPath);
               if (fs.existsSync(fotoFullPath)) {
                 try {
                   if (yPosition > 600) {
@@ -214,6 +224,8 @@ export async function generateReportPDF(
                   );
                   yPosition += 15;
                 }
+              } else {
+                console.warn(`[PDF] Foto non trovata:`, fotoFullPath);
               }
             });
           }
