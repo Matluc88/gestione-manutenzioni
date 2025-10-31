@@ -18,6 +18,7 @@ interface Report {
   pdfPath: string | null;
   creatoIl: string;
   numAttivita: number;
+  impiantoId: number;
   impianto: {
     nome: string;
     proprieta: string | null;

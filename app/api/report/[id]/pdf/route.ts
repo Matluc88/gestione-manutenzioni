@@ -55,7 +55,12 @@ export async function GET(
     let pdfPath = report.pdfPath;
 
     if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', pdfPath))) {
-      pdfPath = await generateReportPDF(report, impostazioni);
+      const reportForPDF = {
+        ...report,
+        creatoIl: report.creatoIl.toISOString(),
+      };
+      
+      pdfPath = await generateReportPDF(reportForPDF, impostazioni);
 
       await prisma.report.update({
         where: { id: reportId },
