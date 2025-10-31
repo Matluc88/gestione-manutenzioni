@@ -25,16 +25,16 @@ export default function ImpiantiList({ tipo }: { tipo: 'manutenzione' | 'interve
   const router = useRouter();
 
   useEffect(() => {
+    const fetchImpianti = async () => {
+      setLoading(true);
+      const res = await fetch(`/api/impianti?search=${search}`);
+      const data = await res.json();
+      setImpianti(data);
+      setLoading(false);
+    };
+    
     fetchImpianti();
   }, [search]);
-
-  const fetchImpianti = async () => {
-    setLoading(true);
-    const res = await fetch(`/api/impianti?search=${search}`);
-    const data = await res.json();
-    setImpianti(data);
-    setLoading(false);
-  };
 
   const handleCreateImpianto = async (e: React.FormEvent) => {
     e.preventDefault();

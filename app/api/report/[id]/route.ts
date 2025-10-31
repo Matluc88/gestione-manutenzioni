@@ -22,6 +22,7 @@ export async function GET(
       attivita: {
         include: {
           componente: true,
+          foto: true,
         },
         orderBy: { ordine: 'asc' },
       },
