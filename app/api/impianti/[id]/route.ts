@@ -39,15 +39,24 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { nome, proprieta } = body;
+  const { nome, proprieta, inManutenzione, inIntervento } = body;
 
   const { id } = await params;
+  const updateData: any = {
+    nome,
+    proprieta: proprieta || null,
+  };
+
+  if (inManutenzione !== undefined) {
+    updateData.inManutenzione = inManutenzione;
+  }
+  if (inIntervento !== undefined) {
+    updateData.inIntervento = inIntervento;
+  }
+
   const impianto = await prisma.impianto.update({
     where: { id: parseInt(id) },
-    data: {
-      nome,
-      proprieta: proprieta || null,
-    },
+    data: updateData,
   });
 
   return NextResponse.json(impianto);
