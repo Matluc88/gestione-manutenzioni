@@ -63,7 +63,7 @@ export async function generateReportPDF(
       const fontRegular = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Regular.ttf'));
       const fontBold = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Bold.ttf'));
 
-      const doc = new PDFDocument({ margin: 50, size: 'A4', autoFirstPage: false });
+      const doc = new PDFDocument({ margin: 50, size: 'A4', autoFirstPage: false, bufferPages: true });
       const stream = fs.createWriteStream(filePath);
 
       doc.registerFont('regular', fontRegular);
@@ -248,11 +248,11 @@ export async function generateReportPDF(
         { align: 'center', width: 495 }
       );
 
-      const pageCount = doc.bufferedPageRange().count;
-      for (let i = 0; i < pageCount; i++) {
+      const range = doc.bufferedPageRange();
+      for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
         doc.fontSize(8).font('regular').text(
-          `Pagina ${i + 1} di ${pageCount}`,
+          `Pagina ${i - range.start + 1} di ${range.count}`,
           50,
           doc.page.height - 50,
           { align: 'center', width: 495 }
