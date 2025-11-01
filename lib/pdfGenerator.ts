@@ -2,6 +2,8 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 
+const normalizePath = (p: string) => (p.startsWith('/') ? p.slice(1) : p);
+
 interface Foto {
   id: number;
   filePath: string;
@@ -76,7 +78,7 @@ export async function generateReportPDF(
       let yPosition = 50;
 
       if (impostazioni.logoPath) {
-        const logoFullPath = path.join(process.cwd(), 'public', impostazioni.logoPath);
+        const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
         if (fs.existsSync(logoFullPath)) {
           try {
             doc.image(logoFullPath, 50, yPosition, { width: 100 });
@@ -198,18 +200,28 @@ export async function generateReportPDF(
           }
 
           if (att.foto.length > 0) {
+            const bottomMargin = doc.page.height - 50;
+            const headerHeight = 15;
+            
+            if (yPosition + headerHeight > bottomMargin) {
+              doc.addPage();
+              yPosition = 50;
+            }
+            
             doc.fontSize(9).font('bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
             yPosition += 15;
 
             att.foto.forEach((foto) => {
-              const fotoFullPath = path.join(process.cwd(), 'public', foto.filePath);
+              const imageBlockHeight = 175;
+              
+              if (yPosition + imageBlockHeight > bottomMargin) {
+                doc.addPage();
+                yPosition = 50;
+              }
+              
+              const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
               if (fs.existsSync(fotoFullPath)) {
                 try {
-                  if (yPosition > 600) {
-                    doc.addPage();
-                    yPosition = 50;
-                  }
-
                   doc.image(fotoFullPath, 70, yPosition, { width: 200, height: 150, fit: [200, 150] });
                   doc.fontSize(8).font('regular').text(foto.fileName, 70, yPosition + 155, { width: 200 });
                   yPosition += 175;
@@ -222,6 +234,13 @@ export async function generateReportPDF(
                   );
                   yPosition += 15;
                 }
+              } else {
+                doc.fontSize(8).font('regular').text(
+                  `[File non trovato: ${foto.fileName}]`,
+                  70,
+                  yPosition
+                );
+                yPosition += 15;
               }
             });
           }
