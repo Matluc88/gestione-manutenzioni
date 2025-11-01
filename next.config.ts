@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ['pdfkit', 'fontkit'],
 };
 
 export default nextConfig;
