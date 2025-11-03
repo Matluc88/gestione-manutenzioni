@@ -11,14 +11,23 @@ export async function GET(req: NextRequest) {
 
   const searchParams = req.nextUrl.searchParams;
   const search = searchParams.get('search') || '';
+  const tipo = searchParams.get('tipo') as 'manutenzione' | 'intervento' | null;
+
+  const whereClause: any = {
+    nome: {
+      contains: search,
+      mode: 'insensitive',
+    },
+  };
+
+  if (tipo === 'manutenzione') {
+    whereClause.inManutenzione = true;
+  } else if (tipo === 'intervento') {
+    whereClause.inIntervento = true;
+  }
 
   const impianti = await prisma.impianto.findMany({
-    where: {
-      nome: {
-        contains: search,
-        mode: 'insensitive',
-      },
-    },
+    where: whereClause,
     include: {
       creatoUtente: {
         select: { username: true },
@@ -37,7 +46,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { nome, proprieta } = body;
+  const { nome, proprieta, inManutenzione, inIntervento } = body;
 
   if (!nome) {
     return NextResponse.json({ error: 'Nome obbligatorio' }, { status: 400 });
@@ -47,6 +56,8 @@ export async function POST(req: NextRequest) {
     data: {
       nome,
       proprieta: proprieta || null,
+      inManutenzione: inManutenzione !== undefined ? inManutenzione : true,
+      inIntervento: inIntervento !== undefined ? inIntervento : true,
       creatoId: parseInt(session.user.id),
     },
   });

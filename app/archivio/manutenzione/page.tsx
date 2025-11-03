@@ -35,7 +35,7 @@ interface Pagination {
   limit: number;
 }
 
-export default function ArchivioPage() {
+export default function ArchivioManutenzione() {
   const { data: session, status } = useSession();
   const [report, setReport] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ export default function ArchivioPage() {
     search: '',
     impiantoId: '',
     utenteId: '',
-    tipo: '',
+    tipo: 'MANUTENZIONE',
     stato: '',
     dataInizio: '',
     dataFine: '',
@@ -105,7 +105,7 @@ export default function ArchivioPage() {
   }, [session, fetchReport]);
 
   const handleFiltriChange = (newFiltri: typeof filtri) => {
-    setFiltri(newFiltri);
+    setFiltri({ ...newFiltri, tipo: 'MANUTENZIONE' });
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -152,14 +152,14 @@ export default function ArchivioPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Archivio Report</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Archivio Manutenzione Ordinaria</h1>
           <p className="text-gray-600 mt-1">
             {loading ? (
               'Caricamento...'
             ) : (
               <>
                 {pagination.totalCount} report totali
-                {filtri.search || filtri.impiantoId || filtri.utenteId || filtri.tipo || filtri.stato || filtri.dataInizio || filtri.dataFine
+                {filtri.search || filtri.impiantoId || filtri.utenteId || filtri.stato || filtri.dataInizio || filtri.dataFine
                   ? ' (filtrati)'
                   : ''}
               </>
@@ -172,6 +172,7 @@ export default function ArchivioPage() {
             filtri={filtri}
             onChange={handleFiltriChange}
             isAdmin={isAdmin}
+            hideTipoFilter={true}
           />
         </div>
 

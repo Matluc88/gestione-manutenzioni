@@ -79,9 +79,7 @@ export default function ReportModal({ reportId, onClose }: ReportModalProps) {
   }, [fetchReport]);
 
   const handleDownload = () => {
-    if (report?.pdfPath) {
-      window.open(`/api/report/${reportId}/pdf`, '_blank');
-    }
+    window.open(`/api/report/${reportId}/pdf`, '_blank');
   };
 
   const getStatoColor = (stato: string) => {
@@ -135,11 +133,13 @@ export default function ReportModal({ reportId, onClose }: ReportModalProps) {
                   className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                     report.stato === 'COMPLETATO'
                       ? 'bg-green-100 text-green-700'
+                      : report.stato === 'IN_LAVORAZIONE'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'bg-yellow-100 text-yellow-700'
                   }`}
                 >
-                  {report.stato === 'COMPLETATO' ? '✅' : '🟡'}
-                  {report.stato}
+                  {report.stato === 'COMPLETATO' ? '✅' : report.stato === 'IN_LAVORAZIONE' ? '🔄' : '🟡'}
+                  {report.stato === 'COMPLETATO' ? 'Completato' : report.stato === 'IN_LAVORAZIONE' ? 'In Lavorazione' : 'Bozza'}
                 </span>
               </div>
             )}
@@ -316,7 +316,7 @@ export default function ReportModal({ reportId, onClose }: ReportModalProps) {
             Chiudi
           </button>
           
-          {report?.stato === 'COMPLETATO' && report?.pdfPath && (
+          {report?.stato === 'COMPLETATO' && (
             <button
               onClick={handleDownload}
               className="flex items-center justify-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"

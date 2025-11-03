@@ -32,9 +32,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/images/onem-logo-transparent.png" 
+              alt="ONE-M Energy Solutions Logo" 
+              className="w-32 h-32 object-contain"
+            />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">ONE-M ENERGY SOLUTIONS</h1>
           <p className="text-gray-600 mt-2">Gestione Manutenzioni</p>
         </div>

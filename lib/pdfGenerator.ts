@@ -2,6 +2,8 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 
+const normalizePath = (p: string) => (p.startsWith('/') ? p.slice(1) : p);
+
 interface Foto {
   id: number;
   filePath: string;
@@ -53,36 +55,30 @@ export async function generateReportPDF(
     try {
       const pdfDir = path.join(process.cwd(), 'public', 'pdf');
       if (!fs.existsSync(pdfDir)) {
-        console.log('[PDF] La cartella pdf non esiste, la creo:', pdfDir);
         fs.mkdirSync(pdfDir, { recursive: true });
       }
 
       const fileName = `${report.codice}.pdf`;
       const filePath = path.join(pdfDir, fileName);
-      const relativePath = `/pdf/${fileName}`;
+      const relativePath = `pdf/${fileName}`;
 
-      console.log('[PDF] Path file:', filePath);
-      console.log('[PDF] Dati report:', JSON.stringify(report));
-      console.log('[PDF] Dati impostazioni:', JSON.stringify(impostazioni));
+      const fontRegular = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Regular.ttf'));
+      const fontBold = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Bold.ttf'));
 
-      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const doc = new PDFDocument({ margin: 50, size: 'A4', autoFirstPage: false, bufferPages: true });
       const stream = fs.createWriteStream(filePath);
 
-      const fontRegularPath = path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Regular.ttf');
-      const fontBoldPath = path.join(process.cwd(), 'public', 'fonts', 'LiberationSans-Bold.ttf');
-      
-      console.log('[PDF] Loading fonts:', { fontRegularPath, fontBoldPath });
-      
-      doc.registerFont('regular', fontRegularPath);
-      doc.registerFont('bold', fontBoldPath);
+      doc.registerFont('regular', fontRegular);
+      doc.registerFont('bold', fontBold);
 
       doc.pipe(stream);
+      doc.font('regular');
+      doc.addPage();
 
       let yPosition = 50;
 
       if (impostazioni.logoPath) {
-        const logoFullPath = path.join(process.cwd(), 'public', impostazioni.logoPath);
-        console.log('[PDF] Path logo:', logoFullPath);
+        const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
         if (fs.existsSync(logoFullPath)) {
           try {
             doc.image(logoFullPath, 50, yPosition, { width: 100 });
@@ -91,12 +87,10 @@ export async function generateReportPDF(
             console.error('Errore caricamento logo:', err);
             yPosition += 20;
           }
-        } else {
-          console.warn('[PDF] Logo non trovato:', logoFullPath);
         }
       }
 
-  doc.fontSize(20).font('bold').text(impostazioni.nomeAzienda, 50, yPosition);
+      doc.fontSize(20).font('bold').text(impostazioni.nomeAzienda, 50, yPosition);
       yPosition += 25;
 
       if (impostazioni.indirizzo) {
@@ -115,7 +109,7 @@ export async function generateReportPDF(
       doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
       yPosition += 30;
 
-  doc.fontSize(18).font('bold').text(
+      doc.fontSize(18).font('bold').text(
         report.tipo === 'MANUTENZIONE' ? 'REPORT MANUTENZIONE ORDINARIA' : 'REPORT INTERVENTO TECNICO',
         50,
         yPosition,
@@ -123,11 +117,11 @@ export async function generateReportPDF(
       );
       yPosition += 30;
 
-  doc.fontSize(12).font('bold').text(`Codice Report: ${report.codice}`, 50, yPosition);
+      doc.fontSize(12).font('bold').text(`Codice Report: ${report.codice}`, 50, yPosition);
       yPosition += 20;
 
-  doc.fontSize(10).font('regular');
-  doc.text(`Data: ${new Date(report.creatoIl).toLocaleDateString('it-IT', {
+      doc.fontSize(10).font('regular');
+      doc.text(`Data: ${new Date(report.creatoIl).toLocaleDateString('it-IT', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -136,10 +130,10 @@ export async function generateReportPDF(
       })}`, 50, yPosition);
       yPosition += 15;
 
-  doc.text(`Operatore: ${report.utente.username}`, 50, yPosition);
+      doc.text(`Operatore: ${report.utente.username}`, 50, yPosition);
       yPosition += 15;
 
-  doc.text(`Impianto: ${report.impianto.nome}`, 50, yPosition);
+      doc.text(`Impianto: ${report.impianto.nome}`, 50, yPosition);
       yPosition += 15;
 
       if (report.impianto.proprieta) {
@@ -151,7 +145,7 @@ export async function generateReportPDF(
       doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
       yPosition += 20;
 
-  doc.fontSize(14).font('bold').text('ATTIVITÀ', 50, yPosition);
+      doc.fontSize(14).font('bold').text('ATTIVITÀ', 50, yPosition);
       yPosition += 20;
 
       if (report.attivita.length === 0) {
@@ -163,7 +157,6 @@ export async function generateReportPDF(
             yPosition = 50;
           }
 
-          console.log(`[PDF] Attività ${index + 1}:`, JSON.stringify(att));
           doc.fontSize(11).font('bold').text(
             `${index + 1}. ${att.descrizione}`,
             50,
@@ -188,38 +181,47 @@ export async function generateReportPDF(
                             att.stato === 'NON_FATTO' ? '#ef4444' : 
                             '#6b7280';
 
-          doc.fontSize(9).font('regular').fillColor(statoColor).text(`Stato: ${statoLabel}`, 70, yPosition);
+          doc.fontSize(9).fillColor(statoColor).text(`Stato: ${statoLabel}`, 70, yPosition);
           doc.fillColor('#000000');
           yPosition += 15;
 
           if (att.motivazione) {
-            doc.fontSize(9).font('regular').text('Motivazione:', 70, yPosition);
+            doc.fontSize(9).font('bold').text('Motivazione:', 70, yPosition);
             yPosition += 12;
             doc.fontSize(9).font('regular').text(att.motivazione, 70, yPosition, { width: 475 });
             yPosition += Math.ceil(att.motivazione.length / 80) * 12 + 5;
           }
 
           if (att.note) {
-            doc.fontSize(9).font('regular').text('Note:', 70, yPosition);
+            doc.fontSize(9).font('bold').text('Note:', 70, yPosition);
             yPosition += 12;
             doc.fontSize(9).font('regular').text(att.note, 70, yPosition, { width: 475 });
             yPosition += Math.ceil(att.note.length / 80) * 12 + 5;
           }
 
           if (att.foto.length > 0) {
-            doc.fontSize(9).font('regular').text(`Foto (${att.foto.length}):`, 70, yPosition);
+            const bottomMargin = doc.page.height - 50;
+            const headerHeight = 15;
+            
+            if (yPosition + headerHeight > bottomMargin) {
+              doc.addPage();
+              yPosition = 50;
+            }
+            
+            doc.fontSize(9).font('bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
             yPosition += 15;
 
             att.foto.forEach((foto) => {
-              const fotoFullPath = path.join(process.cwd(), 'public', foto.filePath);
-              console.log(`[PDF] Path foto:`, fotoFullPath);
+              const imageBlockHeight = 175;
+              
+              if (yPosition + imageBlockHeight > bottomMargin) {
+                doc.addPage();
+                yPosition = 50;
+              }
+              
+              const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
               if (fs.existsSync(fotoFullPath)) {
                 try {
-                  if (yPosition > 600) {
-                    doc.addPage();
-                    yPosition = 50;
-                  }
-
                   doc.image(fotoFullPath, 70, yPosition, { width: 200, height: 150, fit: [200, 150] });
                   doc.fontSize(8).font('regular').text(foto.fileName, 70, yPosition + 155, { width: 200 });
                   yPosition += 175;
@@ -233,7 +235,12 @@ export async function generateReportPDF(
                   yPosition += 15;
                 }
               } else {
-                console.warn(`[PDF] Foto non trovata:`, fotoFullPath);
+                doc.fontSize(8).font('regular').text(
+                  `[File non trovato: ${foto.fileName}]`,
+                  70,
+                  yPosition
+                );
+                yPosition += 15;
               }
             });
           }
@@ -260,11 +267,35 @@ export async function generateReportPDF(
         { align: 'center', width: 495 }
       );
 
-      const pageCount = doc.bufferedPageRange().count;
-      for (let i = 0; i < pageCount; i++) {
+      const range = doc.bufferedPageRange();
+      for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
-  doc.fontSize(8).font('regular').text(
-          `Pagina ${i + 1} di ${pageCount}`,
+        
+        const watermarkPath = path.join(process.cwd(), 'public', 'images', 'onem-logo-watermark.jpg');
+        if (fs.existsSync(watermarkPath)) {
+          try {
+            const pageWidth = doc.page.width;
+            const pageHeight = doc.page.height;
+            const watermarkWidth = 300;
+            const watermarkHeight = 300;
+            const xPosition = (pageWidth - watermarkWidth) / 2;
+            const yPosition = (pageHeight - watermarkHeight) / 2;
+            
+            doc.save();
+            doc.opacity(0.12);
+            doc.image(watermarkPath, xPosition, yPosition, {
+              width: watermarkWidth,
+              height: watermarkHeight,
+              fit: [watermarkWidth, watermarkHeight]
+            });
+            doc.restore();
+          } catch (err) {
+            console.error('Errore aggiunta watermark:', err);
+          }
+        }
+        
+        doc.fontSize(8).font('regular').text(
+          `Pagina ${i - range.start + 1} di ${range.count}`,
           50,
           doc.page.height - 50,
           { align: 'center', width: 495 }

@@ -4,9 +4,11 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
 
+type RuoloType = 'ADMIN' | 'COLLABORATORE';
+
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -18,7 +20,8 @@ export async function PUT(
   }
 
   try {
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
     const body = await request.json();
     const { username, newPassword, ruolo, attivo } = body;
 
@@ -77,12 +80,12 @@ export async function PUT(
 
     const updateData: {
       username: string;
-      ruolo: string;
+      ruolo: RuoloType;
       attivo: boolean;
       passwordHash?: string;
     } = {
       username: username.trim(),
-      ruolo,
+      ruolo: ruolo as RuoloType,
       attivo: attivo !== undefined ? attivo : existingUser.attivo,
     };
 
@@ -114,7 +117,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -126,7 +129,8 @@ export async function DELETE(
   }
 
   try {
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
 
     if (parseInt(session.user.id) === id) {
       return NextResponse.json(

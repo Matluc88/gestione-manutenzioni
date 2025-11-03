@@ -27,10 +27,12 @@ enum Ruolo {
 }
 
 model Impianto {
-  id          Int       @id @default(autoincrement())
-  nome        String    @db.VarChar(100)
-  proprieta   String?   @db.VarChar(100)
-  creatoIl    DateTime  @default(now())
+  id              Int       @id @default(autoincrement())
+  nome            String    @db.VarChar(100)
+  proprieta       String?   @db.VarChar(100)
+  inManutenzione  Boolean   @default(true)
+  inIntervento    Boolean   @default(true)
+  creatoIl        DateTime  @default(now())
   
   creatoId    Int
   creatoUtente Utente   @relation(fields: [creatoId], references: [id])
@@ -72,6 +74,7 @@ enum TipoReport {
 
 enum StatoReport {
   BOZZA
+  IN_LAVORAZIONE
   COMPLETATO
 }
 

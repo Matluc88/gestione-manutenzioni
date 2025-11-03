@@ -1,0 +1,2 @@
+ALTER TABLE "impianti" ADD COLUMN "inManutenzione" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "inIntervento" BOOLEAN NOT NULL DEFAULT true;

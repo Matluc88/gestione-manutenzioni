@@ -6,9 +6,13 @@ import { generateReportPDF } from '@/lib/pdfGenerator';
 import fs from 'fs';
 import path from 'path';
 
+export const runtime = 'nodejs';
+
+const normalizePath = (p: string) => (p.startsWith('/') ? p.slice(1) : p);
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -16,7 +20,8 @@ export async function GET(
   }
 
   try {
-    const reportId = parseInt(params.id);
+    const { id } = await params;
+    const reportId = parseInt(id);
 
     const report = await prisma.report.findUnique({
       where: { id: reportId },
@@ -53,8 +58,14 @@ export async function GET(
 
     let pdfPath = report.pdfPath;
 
-    if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', pdfPath))) {
-      pdfPath = await generateReportPDF(report, impostazioni);
+    const relPath = pdfPath ? normalizePath(pdfPath) : null;
+    if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', relPath!))) {
+      const reportForPDF = {
+        ...report,
+        creatoIl: report.creatoIl.toISOString(),
+      };
+      
+      pdfPath = await generateReportPDF(reportForPDF, impostazioni);
 
       await prisma.report.update({
         where: { id: reportId },
@@ -62,7 +73,8 @@ export async function GET(
       });
     }
 
-    const pdfFullPath = path.join(process.cwd(), 'public', pdfPath);
+    const finalRelPath = normalizePath(pdfPath);
+    const pdfFullPath = path.join(process.cwd(), 'public', finalRelPath);
 
     if (!fs.existsSync(pdfFullPath)) {
       return NextResponse.json({ error: 'PDF non trovato' }, { status: 404 });

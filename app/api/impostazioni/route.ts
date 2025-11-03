@@ -22,11 +22,6 @@ export async function GET() {
       impostazioni = await prisma.impostazioni.create({
         data: {
           id: 1,
-          nomeAzienda: null,
-          indirizzo: null,
-          telefono: null,
-          email: null,
-          logoPath: null,
         },
       });
     }

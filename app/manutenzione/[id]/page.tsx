@@ -8,13 +8,20 @@ import ManutenzioneForm from '@/components/ManutenzioneForm';
 export default async function ManutenzioneImpiantoPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/login');
 
+  const { id } = await params;
+  const impiantoId = parseInt(id);
+  
+  if (!Number.isInteger(impiantoId)) {
+    redirect('/manutenzione');
+  }
+
   const impianto = await prisma.impianto.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: impiantoId },
   });
 
   if (!impianto) {

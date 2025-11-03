@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { generaCodiceReport } from '@/lib/utils';
+import { Prisma } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '20');
 
-  const where: Record<string, unknown> = {};
+  const where: any = {};
 
   if (search) {
     where.OR = [
@@ -45,20 +46,21 @@ export async function GET(req: NextRequest) {
     where.tipo = tipo;
   }
 
-  if (stato && (stato === 'BOZZA' || stato === 'COMPLETATO')) {
-    where.stato = stato;
+  if (stato && (stato === 'BOZZA' || stato === 'IN_LAVORAZIONE' || stato === 'COMPLETATO')) {
+    where.stato = stato as 'BOZZA' | 'IN_LAVORAZIONE' | 'COMPLETATO';
   }
 
   if (dataInizio || dataFine) {
-    where.creatoIl = {};
+    const dateFilter: any = {};
     if (dataInizio) {
-      where.creatoIl.gte = new Date(dataInizio);
+      dateFilter.gte = new Date(dataInizio);
     }
     if (dataFine) {
       const endDate = new Date(dataFine);
       endDate.setHours(23, 59, 59, 999);
-      where.creatoIl.lte = endDate;
+      dateFilter.lte = endDate;
     }
+    where.creatoIl = dateFilter;
   }
 
   try {
@@ -84,7 +86,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     return NextResponse.json({
-      report: report.map((r) => ({
+      report: report.map((r: any) => ({
         id: r.id,
         codice: r.codice,
         tipo: r.tipo,
@@ -92,6 +94,7 @@ export async function GET(req: NextRequest) {
         pdfPath: r.pdfPath,
         creatoIl: r.creatoIl,
         modificatoIl: r.modificatoIl,
+        impiantoId: r.impiantoId,
         impianto: r.impianto,
         utente: r.utente,
         numAttivita: r.attivita.length,
