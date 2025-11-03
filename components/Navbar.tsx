@@ -23,7 +23,7 @@ export default function Navbar({ user }: NavbarProps) {
       <nav className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Sistema Angelo</h1>
+            <h1 className="text-xl font-bold text-gray-900">ONE-M ENERGY SOLUTIONS</h1>
             <p className="text-sm text-gray-600">
               {user.username} • {user.ruolo === 'ADMIN' ? '👑 Admin' : '👤 Collaboratore'}
             </p>

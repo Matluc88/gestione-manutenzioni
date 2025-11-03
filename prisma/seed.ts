@@ -7,10 +7,10 @@ async function main() {
   const hashedPassword = await bcrypt.hash('admin123', 10);
   
   await prisma.utente.upsert({
-    where: { username: 'angelo' },
+    where: { username: 'admin' },
     update: {},
     create: {
-      username: 'angelo',
+      username: 'admin',
       passwordHash: hashedPassword,
       ruolo: 'ADMIN',
       attivo: true,
@@ -21,10 +21,10 @@ async function main() {
     where: { id: 1 },
     update: {},
     create: {
-      nomeAzienda: 'Angelo S.r.l.',
+      nomeAzienda: 'ONE-M ENERGY SOLUTIONS',
       telefono: '+39 123 456 7890',
-      email: 'info@angelo.it',
-      intestazionePdf: 'Report generato automaticamente dal sistema Angelo',
+      email: 'info@onem-energy.it',
+      intestazionePdf: 'Report generato automaticamente da ONE-M ENERGY SOLUTIONS',
     },
   });
 
