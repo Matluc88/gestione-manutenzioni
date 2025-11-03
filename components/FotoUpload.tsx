@@ -104,7 +104,7 @@ export default function FotoUpload({
               : f.filePath;
             
             return (
-              <div key={f.id} className="relative group">
+              <div key={f.id} className="relative">
                 <Image
                   src={previewSrc}
                   alt={f.fileName}
@@ -115,7 +115,8 @@ export default function FotoUpload({
                 />
                 <button
                   onClick={() => handleDelete(f.id)}
-                  className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                  className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg transition hover:bg-red-700 hover:scale-110"
+                  aria-label="Elimina foto"
                 >
                   <X size={16} />
                 </button>

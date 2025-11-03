@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     const compressedBuffer = await sharp(buffer)
+      .rotate() // Auto-rotate based on EXIF orientation
       .resize(1920, null, { 
         withoutEnlargement: true,
         fit: 'inside',
