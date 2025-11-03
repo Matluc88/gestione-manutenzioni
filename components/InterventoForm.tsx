@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Save, FileText, Loader2 } from 'lucide-react';
+import { Plus, Save, FileText, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import FotoUpload from './FotoUpload';
 
 interface Componente {
@@ -40,6 +40,7 @@ export default function InterventoForm({
   
   const [attivita, setAttivita] = useState<Attivita[]>([]);
   const [reportId, setReportId] = useState<number | null>(null);
+  const [expandedActivities, setExpandedActivities] = useState<Set<number>>(new Set());
   
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -82,6 +83,7 @@ export default function InterventoForm({
             foto: att.foto || [],
           }));
           setAttivita(loadedAttivita);
+          setExpandedActivities(new Set([loadedAttivita.length - 1]));
         }
       } else {
         const createRes = await fetch('/api/report', {
@@ -141,7 +143,7 @@ export default function InterventoForm({
 
     const newAtt = await res.json();
 
-    setAttivita([
+    const newAttivita = [
       ...attivita,
       {
         id: newAtt.id,
@@ -152,7 +154,17 @@ export default function InterventoForm({
         componenteId: compId || componenteSelezionato,
         foto: [],
       },
-    ]);
+    ];
+    
+    setAttivita(newAttivita);
+    setExpandedActivities(new Set([newAttivita.length - 1]));
+    
+    setTimeout(() => {
+      const element = document.getElementById(`attivita-${newAttivita.length - 1}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   const updateAttivita = (index: number, field: keyof Attivita, value: string) => {
@@ -175,7 +187,33 @@ export default function InterventoForm({
       });
     }
     
-    setAttivita(attivita.filter((_, i) => i !== index));
+    const newAttivita = attivita.filter((_, i) => i !== index);
+    setAttivita(newAttivita);
+    
+    const newExpanded = new Set<number>();
+    expandedActivities.forEach(idx => {
+      if (idx < index) {
+        newExpanded.add(idx);
+      } else if (idx > index) {
+        newExpanded.add(idx - 1);
+      }
+    });
+    
+    if (newExpanded.size === 0 && newAttivita.length > 0) {
+      newExpanded.add(newAttivita.length - 1);
+    }
+    
+    setExpandedActivities(newExpanded);
+  };
+  
+  const toggleExpanded = (index: number) => {
+    const newExpanded = new Set(expandedActivities);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedActivities(newExpanded);
   };
 
   const salvaAttivita = async () => {
@@ -337,123 +375,177 @@ export default function InterventoForm({
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Attività</h2>
           
-          {attivita.map((att, index) => (
-            <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="font-semibold text-lg">Attività {index + 1}</h3>
-                <button
-                  onClick={() => removeAttivita(index)}
-                  className="text-red-600 hover:text-red-800 text-sm"
+          {attivita.map((att, index) => {
+            const isExpanded = expandedActivities.has(index);
+            const componenteNome = componenti.find(c => c.id === att.componenteId)?.nome || 'N/A';
+            
+            return (
+              <div 
+                key={index} 
+                id={`attivita-${index}`}
+                className={`bg-white rounded-lg border-2 transition-all ${
+                  isExpanded ? 'border-blue-500 shadow-lg' : 'border-gray-200'
+                }`}
+              >
+                <div 
+                  className="p-4 cursor-pointer hover:bg-gray-50"
+                  onClick={() => toggleExpanded(index)}
                 >
-                  Rimuovi
-                </button>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descrizione attività *
-                </label>
-                <input
-                  type="text"
-                  value={att.descrizione}
-                  onChange={(e) => updateAttivita(index, 'descrizione', e.target.value)}
-                  placeholder="Es: Controllo cablaggi, Pulizia filtri..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Stato *
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => updateAttivita(index, 'stato', 'FATTO')}
-                    className={`px-4 py-3 rounded-lg border-2 transition ${
-                      att.stato === 'FATTO'
-                        ? 'border-green-500 bg-green-50 text-green-700'
-                        : 'border-gray-300 hover:border-green-500'
-                    }`}
-                  >
-                    ✅ Fatto
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateAttivita(index, 'stato', 'NON_FATTO')}
-                    className={`px-4 py-3 rounded-lg border-2 transition ${
-                      att.stato === 'NON_FATTO'
-                        ? 'border-red-500 bg-red-50 text-red-700'
-                        : 'border-gray-300 hover:border-red-500'
-                    }`}
-                  >
-                    ❌ Non fatto
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateAttivita(index, 'stato', 'NON_APPLICABILE')}
-                    className={`px-4 py-3 rounded-lg border-2 transition ${
-                      att.stato === 'NON_APPLICABILE'
-                        ? 'border-gray-500 bg-gray-50 text-gray-700'
-                        : 'border-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    ⚪ Non applicabile
-                  </button>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3 flex-1">
+                      <span className="font-semibold text-lg">#{index + 1}</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{att.descrizione}</div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          <span className="font-medium">Componente:</span> {componenteNome}
+                          {' • '}
+                          <span className={`font-medium ${
+                            att.stato === 'FATTO' ? 'text-green-600' : 
+                            att.stato === 'NON_FATTO' ? 'text-red-600' : 
+                            'text-gray-600'
+                          }`}>
+                            {att.stato === 'FATTO' ? '✅ Fatto' : 
+                             att.stato === 'NON_FATTO' ? '❌ Non fatto' : 
+                             '⚪ Non applicabile'}
+                          </span>
+                          {att.foto.length > 0 && (
+                            <>
+                              {' • '}
+                              <span>📷 {att.foto.length} foto</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeAttivita(index);
+                        }}
+                        className="text-red-600 hover:text-red-800 text-sm px-3 py-1 hover:bg-red-50 rounded"
+                      >
+                        Rimuovi
+                      </button>
+                      {isExpanded ? (
+                        <ChevronUp size={24} className="text-gray-400" />
+                      ) : (
+                        <ChevronDown size={24} className="text-gray-400" />
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                {isExpanded && (
+                  <div className="border-t border-gray-200 p-6">
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrizione attività *
+                      </label>
+                      <input
+                        type="text"
+                        value={att.descrizione}
+                        onChange={(e) => updateAttivita(index, 'descrizione', e.target.value)}
+                        placeholder="Es: Controllo cablaggi, Pulizia filtri..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Stato *
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => updateAttivita(index, 'stato', 'FATTO')}
+                          className={`px-4 py-3 rounded-lg border-2 transition ${
+                            att.stato === 'FATTO'
+                              ? 'border-green-500 bg-green-50 text-green-700'
+                              : 'border-gray-300 hover:border-green-500'
+                          }`}
+                        >
+                          ✅ Fatto
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateAttivita(index, 'stato', 'NON_FATTO')}
+                          className={`px-4 py-3 rounded-lg border-2 transition ${
+                            att.stato === 'NON_FATTO'
+                              ? 'border-red-500 bg-red-50 text-red-700'
+                              : 'border-gray-300 hover:border-red-500'
+                          }`}
+                        >
+                          ❌ Non fatto
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateAttivita(index, 'stato', 'NON_APPLICABILE')}
+                          className={`px-4 py-3 rounded-lg border-2 transition ${
+                            att.stato === 'NON_APPLICABILE'
+                              ? 'border-gray-500 bg-gray-50 text-gray-700'
+                              : 'border-gray-300 hover:border-gray-500'
+                          }`}
+                        >
+                          ⚪ Non applicabile
+                        </button>
+                      </div>
+                    </div>
+
+                    {att.stato === 'NON_FATTO' && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Motivazione * (obbligatorio)
+                        </label>
+                        <textarea
+                          value={att.motivazione}
+                          onChange={(e) => updateAttivita(index, 'motivazione', e.target.value)}
+                          placeholder="Spiega perché l'attività non è stata completata..."
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          rows={3}
+                          required
+                        />
+                      </div>
+                    )}
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Note (facoltativo)
+                      </label>
+                      <textarea
+                        value={att.note}
+                        onChange={(e) => updateAttivita(index, 'note', e.target.value)}
+                        placeholder="Note aggiuntive..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                      />
+                    </div>
+
+                    {att.stato !== 'NON_APPLICABILE' && (
+                      <FotoUpload
+                        attivitaId={att.id || null}
+                        foto={att.foto}
+                        onFotoAdded={(foto) => {
+                          const newAttivita = [...attivita];
+                          newAttivita[index].foto.push(foto);
+                          setAttivita(newAttivita);
+                        }}
+                        onFotoRemoved={(fotoId) => {
+                          const newAttivita = [...attivita];
+                          newAttivita[index].foto = newAttivita[index].foto.filter(
+                            (f) => f.id !== fotoId
+                          );
+                          setAttivita(newAttivita);
+                        }}
+                        required={att.stato === 'FATTO' || att.stato === 'NON_FATTO'}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
-
-              {att.stato === 'NON_FATTO' && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Motivazione * (obbligatorio)
-                  </label>
-                  <textarea
-                    value={att.motivazione}
-                    onChange={(e) => updateAttivita(index, 'motivazione', e.target.value)}
-                    placeholder="Spiega perché l'attività non è stata completata..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                    required
-                  />
-                </div>
-              )}
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Note (facoltativo)
-                </label>
-                <textarea
-                  value={att.note}
-                  onChange={(e) => updateAttivita(index, 'note', e.target.value)}
-                  placeholder="Note aggiuntive..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  rows={2}
-                />
-              </div>
-
-              {att.stato !== 'NON_APPLICABILE' && (
-                <FotoUpload
-                  attivitaId={att.id || null}
-                  foto={att.foto}
-                  onFotoAdded={(foto) => {
-                    const newAttivita = [...attivita];
-                    newAttivita[index].foto.push(foto);
-                    setAttivita(newAttivita);
-                  }}
-                  onFotoRemoved={(fotoId) => {
-                    const newAttivita = [...attivita];
-                    newAttivita[index].foto = newAttivita[index].foto.filter(
-                      (f) => f.id !== fotoId
-                    );
-                    setAttivita(newAttivita);
-                  }}
-                  required={att.stato === 'FATTO' || att.stato === 'NON_FATTO'}
-                />
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
