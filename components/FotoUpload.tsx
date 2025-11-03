@@ -29,8 +29,8 @@ export default function FotoUpload({
   const [error, setError] = useState('');
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     if (!attivitaId) {
       setError('Salva prima l\'attività per caricare foto');
@@ -41,22 +41,25 @@ export default function FotoUpload({
     setUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('attivitaId', attivitaId.toString());
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('attivitaId', attivitaId.toString());
 
-      const res = await fetch('/api/foto/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        const res = await fetch('/api/foto/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Errore upload');
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Errore upload');
+        }
+
+        const newFoto = await res.json();
+        onFotoAdded(newFoto);
       }
-
-      const newFoto = await res.json();
-      onFotoAdded(newFoto);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore durante upload';
       setError(errorMessage);
@@ -102,6 +105,7 @@ export default function FotoUpload({
                 alt={f.fileName}
                 width={300}
                 height={300}
+                unoptimized
                 className="w-full h-32 object-cover rounded-lg border border-gray-200"
               />
               <button
@@ -127,6 +131,7 @@ export default function FotoUpload({
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={handleFileSelect}
             disabled={uploading}
             className="hidden"
@@ -144,6 +149,7 @@ export default function FotoUpload({
             type="file"
             accept="image/*"
             capture="environment"
+            multiple
             onChange={handleFileSelect}
             disabled={uploading}
             className="hidden"
