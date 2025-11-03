@@ -37,7 +37,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
             <img 
-              src="/images/onem-logo-watermark.jpg" 
+              src="/images/onem-logo-transparent.png" 
               alt="ONE-M Energy Solutions Logo" 
               className="w-32 h-32 object-contain"
             />
