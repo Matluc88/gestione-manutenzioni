@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '20');
 
-  const where: Prisma.ReportWhereInput = {};
+  const where: any = {};
 
   if (search) {
     where.OR = [
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (dataInizio || dataFine) {
-    const dateFilter: Prisma.DateTimeFilter = {};
+    const dateFilter: any = {};
     if (dataInizio) {
       dateFilter.gte = new Date(dataInizio);
     }
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     return NextResponse.json({
-      report: report.map((r) => ({
+      report: report.map((r: any) => ({
         id: r.id,
         codice: r.codice,
         tipo: r.tipo,

@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
-import { Ruolo } from '@prisma/client';
+
+type RuoloType = 'ADMIN' | 'COLLABORATORE';
 
 export async function PUT(
   request: Request,
@@ -79,12 +80,12 @@ export async function PUT(
 
     const updateData: {
       username: string;
-      ruolo: Ruolo;
+      ruolo: RuoloType;
       attivo: boolean;
       passwordHash?: string;
     } = {
       username: username.trim(),
-      ruolo: ruolo as Ruolo,
+      ruolo: ruolo as RuoloType,
       attivo: attivo !== undefined ? attivo : existingUser.attivo,
     };
 
