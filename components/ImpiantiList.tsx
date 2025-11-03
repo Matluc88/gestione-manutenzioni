@@ -216,7 +216,7 @@ export default function ImpiantiList({ tipo }: { tipo: 'manutenzione' | 'interve
                   >
                     <Edit2 size={18} />
                   </button>
-                  {session?.user?.ruolo === 'ADMIN' && (
+                  {(session?.user?.ruolo === 'ADMIN' || impianto.creatoUtente.username === session?.user?.username) && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -325,7 +325,7 @@ export default function ImpiantiList({ tipo }: { tipo: 'manutenzione' | 'interve
               Conferma eliminazione
             </h2>
             <p className="text-gray-600 mb-6">
-              Sei sicuro di voler eliminare questo impianto? Questa azione non può essere annullata.
+              <strong>Attenzione:</strong> Eliminando l&apos;impianto si elimineranno anche tutti i report associati. Proseguire?
             </p>
             <div className="flex gap-3">
               <button
