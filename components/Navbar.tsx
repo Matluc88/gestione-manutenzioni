@@ -64,7 +64,7 @@ export default function Navbar({ user }: NavbarProps) {
             </div>
             <div className="border-l border-gray-300 h-8"></div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Sistema Angelo</h1>
+              <h1 className="text-xl font-bold text-gray-900">ONE-M ENERGY SOLUTIONS</h1>
               <p className="text-sm text-gray-600">
                 {user.username} • {user.ruolo === 'ADMIN' ? '👑 Admin' : '👤 Collaboratore'}
               </p>

@@ -1,4 +1,4 @@
-# Sistema Angelo - Gestione Manutenzioni
+# ONE-M ENERGY SOLUTIONS - Gestione Manutenzioni
 
 Sistema web completo per la gestione di report di manutenzione e interventi tecnici su impianti industriali, con generazione automatica di PDF professionali.
 
@@ -55,7 +55,7 @@ Crea un database PostgreSQL:
 
 ```bash
 # Usando psql
-createdb angelo
+createdb onem_energy
 
 # Oppure tramite GUI (pgAdmin, TablePlus, etc.)
 ```
@@ -71,7 +71,7 @@ cp .env.example .env
 Modifica `.env` con i tuoi valori:
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/angelo"
+DATABASE_URL="postgresql://username:password@localhost:5432/onem_energy"
 NEXTAUTH_SECRET="genera-con-openssl-rand-base64-32"
 NEXTAUTH_URL="http://localhost:3000"
 ```
@@ -97,7 +97,7 @@ npx prisma db seed
 ```
 
 Questo creerà:
-- Utente admin: `angelo` / `angelo123`
+- Utente admin: `admin` / `admin123`
 - Impostazioni aziendali di default
 - Componenti predefiniti di esempio
 
@@ -113,7 +113,7 @@ Apri [http://localhost:3000](http://localhost:3000) nel browser.
 
 Dopo il seed:
 
-- **Admin**: `angelo` / `angelo123`
+- **Admin**: `admin` / `admin123`
 - **Collaboratore**: Crea tramite pannello admin (Impostazioni → Gestione Utenti)
 
 ## 🔑 Ruoli Utente
@@ -216,7 +216,7 @@ Assicurati che il codice sia committato e pushato su GitHub.
 
 1. Vai su [render.com](https://render.com)
 2. New → PostgreSQL
-3. Nome: `angelo-db`
+3. Nome: `onem-energy-db`
 4. Copia l'**Internal Database URL**
 
 ### 3. Crea Web Service
@@ -224,7 +224,7 @@ Assicurati che il codice sia committato e pushato su GitHub.
 1. New → Web Service
 2. Connetti repository GitHub
 3. Configurazione:
-   - **Name**: `angelo-app`
+   - **Name**: `onem-energy-app`
    - **Environment**: Node
    - **Build Command**: `npm install && npx prisma generate && npx prisma migrate deploy && npm run build`
    - **Start Command**: `npm start`
@@ -237,7 +237,7 @@ Aggiungi in Environment Variables:
 ```
 DATABASE_URL=<Internal Database URL da step 2>
 NEXTAUTH_SECRET=<genera con: openssl rand -base64 32>
-NEXTAUTH_URL=https://angelo-app.onrender.com
+NEXTAUTH_URL=https://onem-energy-app.onrender.com
 ```
 
 ### 5. Deploy
@@ -251,7 +251,7 @@ Dopo il primo deploy, esegui il seed:
 1. Render Dashboard → Shell
 2. Esegui: `npx prisma db seed`
 
-Ora puoi accedere con `angelo` / `angelo123`
+Ora puoi accedere con `admin` / `admin123`
 
 ## 📝 Scripts Disponibili
 
@@ -302,7 +302,7 @@ Progetto privato - Tutti i diritti riservati
 
 ## 👨‍💻 Autore
 
-Sviluppato per Angelo S.r.l.
+Sviluppato per ONE-M ENERGY SOLUTIONS
 
 ## 📞 Supporto
 

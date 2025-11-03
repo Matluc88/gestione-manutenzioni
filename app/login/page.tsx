@@ -35,7 +35,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Sistema Angelo</h1>
+          <h1 className="text-3xl font-bold text-gray-900">ONE-M ENERGY SOLUTIONS</h1>
           <p className="text-gray-600 mt-2">Gestione Manutenzioni</p>
         </div>
 
