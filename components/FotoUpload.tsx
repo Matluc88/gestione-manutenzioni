@@ -149,6 +149,7 @@ export default function FotoUpload({
             type="file"
             accept="image/*"
             capture="environment"
+            multiple
             onChange={handleFileSelect}
             disabled={uploading}
             className="hidden"
