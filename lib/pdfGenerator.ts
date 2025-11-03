@@ -270,6 +270,30 @@ export async function generateReportPDF(
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
+        
+        const watermarkPath = path.join(process.cwd(), 'public', 'images', 'onem-logo-watermark.jpg');
+        if (fs.existsSync(watermarkPath)) {
+          try {
+            const pageWidth = doc.page.width;
+            const pageHeight = doc.page.height;
+            const watermarkWidth = 300;
+            const watermarkHeight = 300;
+            const xPosition = (pageWidth - watermarkWidth) / 2;
+            const yPosition = (pageHeight - watermarkHeight) / 2;
+            
+            doc.save();
+            doc.opacity(0.12);
+            doc.image(watermarkPath, xPosition, yPosition, {
+              width: watermarkWidth,
+              height: watermarkHeight,
+              fit: [watermarkWidth, watermarkHeight]
+            });
+            doc.restore();
+          } catch (err) {
+            console.error('Errore aggiunta watermark:', err);
+          }
+        }
+        
         doc.fontSize(8).font('regular').text(
           `Pagina ${i - range.start + 1} di ${range.count}`,
           50,
