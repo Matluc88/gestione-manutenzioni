@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,16 +16,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
-    const { id } = await params;
     const foto = await prisma.foto.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(params.id) },
     });
 
     if (!foto) {
       return NextResponse.json({ error: 'Foto non trovata' }, { status: 404 });
     }
 
-    const fullPath = path.join(process.cwd(), 'public', foto.filePath);
+    const filename = path.basename(foto.filePath);
+    const fullPath = path.join(process.cwd(), 'public', 'uploads', filename);
     if (existsSync(fullPath)) {
       await unlink(fullPath);
     }

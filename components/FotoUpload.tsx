@@ -98,25 +98,31 @@ export default function FotoUpload({
 
       {foto.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {foto.map((f) => (
-            <div key={f.id} className="relative group">
-              <Image
-                src={f.filePath}
-                alt={f.fileName}
-                width={300}
-                height={300}
-                unoptimized
-                className="w-full h-32 object-cover rounded-lg border border-gray-200"
-              />
-              <button
-                onClick={() => handleDelete(f.id)}
-                className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
-              >
-                <X size={16} />
-              </button>
-              <p className="text-xs text-gray-500 mt-1 truncate">{f.fileName}</p>
-            </div>
-          ))}
+          {foto.map((f) => {
+            const previewSrc = f.filePath.startsWith('/uploads/')
+              ? `/api/uploads/${f.filePath.split('/').pop()}`
+              : f.filePath;
+            
+            return (
+              <div key={f.id} className="relative group">
+                <Image
+                  src={previewSrc}
+                  alt={f.fileName}
+                  width={300}
+                  height={300}
+                  unoptimized
+                  className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                />
+                <button
+                  onClick={() => handleDelete(f.id)}
+                  className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                >
+                  <X size={16} />
+                </button>
+                <p className="text-xs text-gray-500 mt-1 truncate">{f.fileName}</p>
+              </div>
+            );
+          })}
         </div>
       )}
 
