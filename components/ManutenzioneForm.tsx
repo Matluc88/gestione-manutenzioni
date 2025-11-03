@@ -54,16 +54,47 @@ export default function ManutenzioneForm({
     };
 
     const createOrLoadReport = async () => {
-      const res = await fetch('/api/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          impiantoId,
-          tipo: 'MANUTENZIONE',
-        }),
-      });
-      const report = await res.json();
-      setReportId(report.id);
+      let res = await fetch(`/api/report?impiantoId=${impiantoId}&tipo=MANUTENZIONE&stato=IN_LAVORAZIONE&limit=1`);
+      let data = await res.json();
+      
+      let existingReport = data.report && data.report.length > 0 ? data.report[0] : null;
+      
+      if (!existingReport) {
+        res = await fetch(`/api/report?impiantoId=${impiantoId}&tipo=MANUTENZIONE&stato=BOZZA&limit=1`);
+        data = await res.json();
+        existingReport = data.report && data.report.length > 0 ? data.report[0] : null;
+      }
+      
+      if (existingReport) {
+        const detailRes = await fetch(`/api/report/${existingReport.id}`);
+        const reportDetail = await detailRes.json();
+        
+        setReportId(reportDetail.id);
+        
+        if (reportDetail.attivita && reportDetail.attivita.length > 0) {
+          const loadedAttivita = reportDetail.attivita.map((att: any) => ({
+            id: att.id,
+            descrizione: att.descrizione,
+            stato: att.stato,
+            motivazione: att.motivazione || '',
+            note: att.note || '',
+            componenteId: att.componenteId,
+            foto: att.foto || [],
+          }));
+          setAttivita(loadedAttivita);
+        }
+      } else {
+        const createRes = await fetch('/api/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            impiantoId,
+            tipo: 'MANUTENZIONE',
+          }),
+        });
+        const newReport = await createRes.json();
+        setReportId(newReport.id);
+      }
     };
 
     fetchComponenti();
@@ -135,7 +166,15 @@ export default function ManutenzioneForm({
     setAttivita(newAttivita);
   };
 
-  const removeAttivita = (index: number) => {
+  const removeAttivita = async (index: number) => {
+    const att = attivita[index];
+    
+    if (att.id) {
+      await fetch(`/api/attivita/${att.id}`, {
+        method: 'DELETE',
+      });
+    }
+    
     setAttivita(attivita.filter((_, i) => i !== index));
   };
 

@@ -62,3 +62,23 @@ export async function PUT(req: NextRequest) {
 
   return NextResponse.json(attivita);
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
+  }
+
+  const url = new URL(req.url);
+  const id = url.pathname.split('/').pop();
+
+  if (!id) {
+    return NextResponse.json({ error: 'ID mancante' }, { status: 400 });
+  }
+
+  await prisma.attivita.delete({
+    where: { id: parseInt(id) },
+  });
+
+  return NextResponse.json({ success: true });
+}
