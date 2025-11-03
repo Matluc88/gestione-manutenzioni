@@ -259,14 +259,6 @@ export async function generateReportPDF(
         yPosition = 50;
       }
 
-      yPosition += 20;
-      doc.fontSize(9).font('regular').text(
-        impostazioni.intestazionePdf,
-        50,
-        yPosition,
-        { align: 'center', width: 495 }
-      );
-
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
