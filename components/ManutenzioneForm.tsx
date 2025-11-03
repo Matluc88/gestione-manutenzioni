@@ -143,12 +143,12 @@ export default function ManutenzioneForm({
 
     const newAtt = await res.json();
 
-    const newAttivita = [
+    const newAttivita: Attivita[] = [
       ...attivita,
       {
         id: newAtt.id,
         descrizione: 'Nuova attività',
-        stato: 'FATTO',
+        stato: 'FATTO' as const,
         motivazione: '',
         note: '',
         componenteId: compId || componenteSelezionato,
