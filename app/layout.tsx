@@ -8,7 +8,7 @@ import { Toaster } from 'react-hot-toast';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Sistema Angelo',
+  title: 'ONE-M ENERGY SOLUTIONS',
   description: 'Gestione Manutenzioni',
 };
 
