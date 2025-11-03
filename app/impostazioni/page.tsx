@@ -6,11 +6,12 @@ import { redirect } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import LogoTab from '@/components/LogoTab';
 import UtentiTab from '@/components/UtentiTab';
-import { Building, Image as ImageIcon, Users, Loader2 } from 'lucide-react';
+import ComponentiTab from '@/components/ComponentiTab';
+import { Building, Image as ImageIcon, Users, Package, Loader2 } from 'lucide-react';
 
 export default function ImpostazioniPage() {
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState<'dati' | 'logo' | 'utenti'>('dati');
+  const [activeTab, setActiveTab] = useState<'dati' | 'logo' | 'utenti' | 'componenti'>('dati');
   const [formData, setFormData] = useState({
     nomeAzienda: '',
     indirizzo: '',
@@ -96,7 +97,7 @@ export default function ImpostazioniPage() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Impostazioni</h1>
-          <p className="text-gray-600 mt-1">Gestisci i dati aziendali, il logo e gli utenti</p>
+          <p className="text-gray-600 mt-1">Gestisci i dati aziendali, il logo, gli utenti e i componenti</p>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -136,6 +137,18 @@ export default function ImpostazioniPage() {
               >
                 <Users size={20} />
                 Gestione Utenti
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('componenti')}
+                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                  activeTab === 'componenti'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Package size={20} />
+                Componenti
               </button>
             </nav>
           </div>
@@ -228,8 +241,10 @@ export default function ImpostazioniPage() {
               </div>
             ) : activeTab === 'logo' ? (
               <LogoTab />
-            ) : (
+            ) : activeTab === 'utenti' ? (
               <UtentiTab />
+            ) : (
+              <ComponentiTab />
             )}
           </div>
         </div>

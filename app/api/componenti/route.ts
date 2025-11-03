@@ -39,16 +39,23 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { nome, impiantoId } = body;
+  const { nome, impiantoId, predefinito } = body;
 
-  if (!nome) {
+  if (!nome || nome.trim().length === 0) {
     return NextResponse.json({ error: 'Nome obbligatorio' }, { status: 400 });
+  }
+
+  if (predefinito && session.user.ruolo !== 'ADMIN') {
+    return NextResponse.json(
+      { error: 'Solo gli admin possono creare componenti predefiniti' },
+      { status: 403 }
+    );
   }
 
   const componente = await prisma.componente.create({
     data: {
-      nome,
-      predefinito: false,
+      nome: nome.trim(),
+      predefinito: predefinito || false,
       impiantoId: impiantoId ? parseInt(impiantoId) : null,
     },
   });
