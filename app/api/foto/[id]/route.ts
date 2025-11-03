@@ -19,10 +19,29 @@ export async function DELETE(
     const { id } = await params;
     const foto = await prisma.foto.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        attivita: {
+          include: {
+            report: {
+              select: { utenteId: true },
+            },
+          },
+        },
+      },
     });
 
     if (!foto) {
       return NextResponse.json({ error: 'Foto non trovata' }, { status: 404 });
+    }
+
+    const isAdmin = session.user.ruolo === 'ADMIN';
+    const isOwner = foto.attivita.report.utenteId === parseInt(session.user.id);
+    
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json(
+        { error: 'Non autorizzato. Puoi eliminare solo le tue foto.' },
+        { status: 403 }
+      );
     }
 
     const filename = path.basename(foto.filePath);

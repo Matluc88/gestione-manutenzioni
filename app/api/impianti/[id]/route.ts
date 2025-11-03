@@ -38,6 +38,13 @@ export async function PUT(
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
   }
 
+  if (session.user.ruolo !== 'ADMIN') {
+    return NextResponse.json(
+      { error: 'Non autorizzato. Solo gli admin possono modificare gli impianti.' },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json();
   const { nome, proprieta, inManutenzione, inIntervento } = body;
 
