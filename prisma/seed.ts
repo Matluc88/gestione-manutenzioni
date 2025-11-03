@@ -24,7 +24,7 @@ async function main() {
       nomeAzienda: 'ONE-M ENERGY SOLUTIONS',
       telefono: '+39 123 456 7890',
       email: 'info@onem-energy.it',
-      intestazionePdf: 'Report generato automaticamente da ONE-M ENERGY SOLUTIONS',
+      intestazionePdf: 'Report generato automaticamente',
     },
   });
 
