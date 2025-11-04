@@ -183,7 +183,12 @@ export async function generateReportPDF(
           doc.fillColor('#000000');
           yPosition += 15;
 
-          if (att.foto.length > 0) {
+          const validFoto = att.foto.filter(foto => {
+            const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
+            return fs.existsSync(fotoFullPath);
+          });
+
+          if (validFoto.length > 0) {
             const bottomMargin = doc.page.height - 50;
             const headerHeight = 15;
             
@@ -192,7 +197,7 @@ export async function generateReportPDF(
               yPosition = 50;
             }
             
-            doc.fontSize(9).font('bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
+            doc.fontSize(9).font('bold').text(`Foto (${validFoto.length}):`, 70, yPosition);
             yPosition += 15;
 
             const photoWidth = 242;
@@ -202,7 +207,7 @@ export async function generateReportPDF(
             const photosPerRow = 2;
             const rowHeight = photoHeight + photoSpacing;
 
-            att.foto.forEach((foto, fotoIndex) => {
+            validFoto.forEach((foto, fotoIndex) => {
               const column = fotoIndex % photosPerRow;
               const isNewRow = column === 0;
               
@@ -218,31 +223,22 @@ export async function generateReportPDF(
               const xPosition = leftMargin + column * (photoWidth + photoSpacing);
               
               const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
-              if (fs.existsSync(fotoFullPath)) {
-                try {
-                  doc.image(fotoFullPath, xPosition, yPosition, { 
-                    width: photoWidth, 
-                    height: photoHeight, 
-                    fit: [photoWidth, photoHeight] 
-                  });
-                } catch (err) {
-                  console.error(`Errore caricamento foto ${foto.fileName}:`, err);
-                  doc.fontSize(8).font('regular').text(
-                    `[Foto non disponibile]`,
-                    xPosition,
-                    yPosition
-                  );
-                }
-              } else {
-                doc.fontSize(8).font('regular').text(
-                  `[File non trovato]`,
-                  xPosition,
-                  yPosition
-                );
+              try {
+                doc.image(fotoFullPath, xPosition, yPosition, { 
+                  width: photoWidth, 
+                  height: photoHeight, 
+                  fit: [photoWidth, photoHeight] 
+                });
+              } catch (err) {
+                console.error(`Errore caricamento foto ${foto.fileName}:`, err);
               }
             });
             
-            yPosition += rowHeight;
+            const totalRows = Math.ceil(validFoto.length / photosPerRow);
+            const lastRowPhotos = validFoto.length % photosPerRow || photosPerRow;
+            if (lastRowPhotos > 0) {
+              yPosition += photoHeight + 10;
+            }
           }
 
           if (att.motivazione) {
