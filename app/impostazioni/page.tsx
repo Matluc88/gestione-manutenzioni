@@ -17,6 +17,7 @@ export default function ImpostazioniPage() {
     indirizzo: '',
     telefono: '',
     email: '',
+    partitaIva: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,6 +45,7 @@ export default function ImpostazioniPage() {
         indirizzo: data.indirizzo || '',
         telefono: data.telefono || '',
         email: data.email || '',
+        partitaIva: data.partitaIva || '',
       });
     } catch (error) {
       console.error('Errore caricamento impostazioni:', error);
@@ -206,6 +208,19 @@ export default function ImpostazioniPage() {
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Es. info@one-m.it"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Partita IVA
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.partitaIva}
+                      onChange={(e) => setFormData({ ...formData, partitaIva: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Es. 05129780754"
                     />
                   </div>
 

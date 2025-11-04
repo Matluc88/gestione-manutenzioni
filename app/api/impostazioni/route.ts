@@ -48,7 +48,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { nomeAzienda, indirizzo, telefono, email } = body;
+    const { nomeAzienda, indirizzo, telefono, email, partitaIva } = body;
 
     const impostazioni = await prisma.impostazioni.upsert({
       where: { id: 1 },
@@ -57,6 +57,7 @@ export async function PUT(req: NextRequest) {
         indirizzo,
         telefono,
         email,
+        partitaIva,
       },
       create: {
         id: 1,
@@ -64,6 +65,7 @@ export async function PUT(req: NextRequest) {
         indirizzo,
         telefono,
         email,
+        partitaIva,
         logoPath: null,
       },
     });

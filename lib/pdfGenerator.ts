@@ -43,6 +43,7 @@ interface Impostazioni {
   indirizzo: string | null;
   telefono: string | null;
   email: string | null;
+  partitaIva: string | null;
   logoPath: string | null;
   intestazionePdf: string;
 }
@@ -95,6 +96,11 @@ export async function generateReportPDF(
 
       if (impostazioni.indirizzo) {
         doc.fontSize(10).font('regular').text(impostazioni.indirizzo, 50, yPosition);
+        yPosition += 15;
+      }
+
+      if (impostazioni.partitaIva) {
+        doc.fontSize(10).font('regular').text(`PARTITA IVA ${impostazioni.partitaIva}`, 50, yPosition);
         yPosition += 15;
       }
 
