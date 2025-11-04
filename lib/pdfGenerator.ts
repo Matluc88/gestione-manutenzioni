@@ -145,9 +145,6 @@ export async function generateReportPDF(
       doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
       yPosition += 20;
 
-      doc.fontSize(14).font('bold').text('ATTIVITÀ', 50, yPosition);
-      yPosition += 20;
-
       if (report.attivita.length === 0) {
         doc.fontSize(10).font('regular').text('Nessuna attività registrata', 50, yPosition);
       } else {
@@ -157,22 +154,17 @@ export async function generateReportPDF(
             yPosition = 50;
           }
 
+          const taskTitle = att.componente 
+            ? `${att.componente.nome} - ${att.descrizione}`
+            : att.descrizione;
+
           doc.fontSize(11).font('bold').text(
-            `${index + 1}. ${att.descrizione}`,
+            `${index + 1}. ${taskTitle}`,
             50,
             yPosition,
             { width: 495 }
           );
           yPosition += 20;
-
-          if (att.componente) {
-            doc.fontSize(9).font('regular').text(
-              `Componente: ${att.componente.nome}`,
-              70,
-              yPosition
-            );
-            yPosition += 15;
-          }
 
           const statoLabel = att.stato === 'FATTO' ? '✓ Fatto' : 
                             att.stato === 'NON_FATTO' ? '✗ Non fatto' : 
@@ -184,20 +176,6 @@ export async function generateReportPDF(
           doc.fontSize(9).fillColor(statoColor).text(`Stato: ${statoLabel}`, 70, yPosition);
           doc.fillColor('#000000');
           yPosition += 15;
-
-          if (att.motivazione) {
-            doc.fontSize(9).font('bold').text('Motivazione:', 70, yPosition);
-            yPosition += 12;
-            doc.fontSize(9).font('regular').text(att.motivazione, 70, yPosition, { width: 475 });
-            yPosition += Math.ceil(att.motivazione.length / 80) * 12 + 5;
-          }
-
-          if (att.note) {
-            doc.fontSize(9).font('bold').text('Note:', 70, yPosition);
-            yPosition += 12;
-            doc.fontSize(9).font('regular').text(att.note, 70, yPosition, { width: 475 });
-            yPosition += Math.ceil(att.note.length / 80) * 12 + 5;
-          }
 
           if (att.foto.length > 0) {
             const bottomMargin = doc.page.height - 50;
@@ -212,7 +190,7 @@ export async function generateReportPDF(
             yPosition += 15;
 
             att.foto.forEach((foto) => {
-              const imageBlockHeight = 175;
+              const imageBlockHeight = 160;
               
               if (yPosition + imageBlockHeight > bottomMargin) {
                 doc.addPage();
@@ -223,12 +201,11 @@ export async function generateReportPDF(
               if (fs.existsSync(fotoFullPath)) {
                 try {
                   doc.image(fotoFullPath, 70, yPosition, { width: 200, height: 150, fit: [200, 150] });
-                  doc.fontSize(8).font('regular').text(foto.fileName, 70, yPosition + 155, { width: 200 });
-                  yPosition += 175;
+                  yPosition += 160;
                 } catch (err) {
                   console.error(`Errore caricamento foto ${foto.fileName}:`, err);
                   doc.fontSize(8).font('regular').text(
-                    `[Foto non disponibile: ${foto.fileName}]`,
+                    `[Foto non disponibile]`,
                     70,
                     yPosition
                   );
@@ -236,13 +213,27 @@ export async function generateReportPDF(
                 }
               } else {
                 doc.fontSize(8).font('regular').text(
-                  `[File non trovato: ${foto.fileName}]`,
+                  `[File non trovato]`,
                   70,
                   yPosition
                 );
                 yPosition += 15;
               }
             });
+          }
+
+          if (att.motivazione) {
+            doc.fontSize(9).font('bold').text('Motivazione:', 70, yPosition);
+            yPosition += 12;
+            doc.fontSize(9).font('regular').text(att.motivazione, 70, yPosition, { width: 475 });
+            yPosition += Math.ceil(att.motivazione.length / 80) * 12 + 5;
+          }
+
+          if (att.note) {
+            doc.fontSize(9).font('bold').text('Note:', 70, yPosition);
+            yPosition += 12;
+            doc.fontSize(9).font('regular').text(att.note, 70, yPosition, { width: 475 });
+            yPosition += Math.ceil(att.note.length / 80) * 12 + 5;
           }
 
           yPosition += 10;
@@ -268,8 +259,8 @@ export async function generateReportPDF(
           try {
             const pageWidth = doc.page.width;
             const pageHeight = doc.page.height;
-            const watermarkWidth = 300;
-            const watermarkHeight = 300;
+            const watermarkWidth = 450;
+            const watermarkHeight = 450;
             const xPosition = (pageWidth - watermarkWidth) / 2;
             const yPosition = (pageHeight - watermarkHeight) / 2;
             
