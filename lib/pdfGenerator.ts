@@ -195,10 +195,10 @@ export async function generateReportPDF(
             doc.fontSize(9).font('bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
             yPosition += 15;
 
-            const photoWidth = 237;
-            const photoHeight = 178;
-            const photoSpacing = 20;
-            const leftMargin = 70;
+            const photoWidth = 242;
+            const photoHeight = 182;
+            const photoSpacing = 10;
+            const leftMargin = 50;
             const photosPerRow = 2;
             const rowHeight = photoHeight + photoSpacing;
 
