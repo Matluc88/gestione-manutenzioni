@@ -120,7 +120,8 @@ export async function generateReportPDF(
         yPosition += 20;
       }
 
-      doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(1);
       yPosition += 30;
 
       doc.fontSize(18).font('bold').text(
@@ -156,7 +157,8 @@ export async function generateReportPDF(
       }
 
       yPosition += 10;
-      doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(1);
       yPosition += 20;
 
       if (report.attivita.length === 0) {
@@ -261,8 +263,8 @@ export async function generateReportPDF(
 
           yPosition += 10;
           if (yPosition < 750) {
-            doc.moveTo(50, yPosition).lineTo(545, yPosition).strokeColor('#e5e7eb').stroke();
-            doc.strokeColor('#000000');
+            doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor('#e5e7eb').stroke();
+            doc.strokeColor('#000000').lineWidth(1);
             yPosition += 15;
           }
         });
@@ -298,8 +300,8 @@ export async function generateReportPDF(
         doc.fontSize(8).font('regular').text(
           `Pagina ${i - range.start + 1} di ${range.count}`,
           50,
-          doc.page.height - 50,
-          { align: 'center', width: 495 }
+          doc.page.height - 40,
+          { align: 'center', width: 495, lineBreak: false }
         );
       }
       
