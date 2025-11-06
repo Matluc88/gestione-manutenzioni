@@ -279,10 +279,10 @@ export async function generateReportPDF(
           try {
             const pageWidth = doc.page.width;
             const pageHeight = doc.page.height;
-            const watermarkWidth = 550;
-            const watermarkHeight = 550;
-            const xPosition = (pageWidth - watermarkWidth) / 2;
-            const yPosition = (pageHeight - watermarkHeight) / 2;
+            const watermarkWidth = 540;
+            const watermarkHeight = 540;
+            const xPosition = Math.round((pageWidth - watermarkWidth) / 2);
+            const yPosition = Math.round((pageHeight - watermarkHeight) / 2);
             
             doc.save();
             doc.opacity(0.12);
