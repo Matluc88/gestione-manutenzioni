@@ -78,16 +78,24 @@ export async function generateReportPDF(
 
       let yPosition = 50;
 
+      let headerLogoPath: string | null = null;
+      let headerLogoY = yPosition;
+      
       if (impostazioni.logoPath) {
         const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
+        console.log('Header logo path:', logoFullPath, 'exists:', fs.existsSync(logoFullPath));
         if (fs.existsSync(logoFullPath)) {
           try {
             doc.image(logoFullPath, 50, yPosition, { width: 100 });
+            headerLogoPath = logoFullPath;
+            headerLogoY = yPosition;
             yPosition += 110;
           } catch (err) {
             console.error('Errore caricamento logo:', err);
             yPosition += 20;
           }
+        } else {
+          console.warn('Logo file not found at:', logoFullPath);
         }
       }
 
@@ -302,6 +310,16 @@ export async function generateReportPDF(
           doc.page.height - 50,
           { align: 'center', width: 495 }
         );
+      }
+      
+      if (headerLogoPath && range.count > 0) {
+        doc.switchToPage(range.start);
+        try {
+          doc.image(headerLogoPath, 50, headerLogoY, { width: 100 });
+          console.log('Re-drew header logo on top of watermark');
+        } catch (err) {
+          console.error('Errore re-drawing header logo:', err);
+        }
       }
 
       doc.end();

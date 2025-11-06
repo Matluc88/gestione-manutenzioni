@@ -59,7 +59,24 @@ export async function GET(
     let pdfPath = report.pdfPath;
 
     const relPath = pdfPath ? normalizePath(pdfPath) : null;
-    if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', relPath!))) {
+    const pdfFullPath = pdfPath ? path.join(process.cwd(), 'public', relPath!) : null;
+    const pdfExists = pdfFullPath && fs.existsSync(pdfFullPath);
+    
+    let needsRegeneration = !pdfPath || !pdfExists;
+    
+    if (pdfExists && impostazioni.logoPath) {
+      const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
+      if (fs.existsSync(logoFullPath)) {
+        const pdfMtime = fs.statSync(pdfFullPath!).mtimeMs;
+        const logoMtime = fs.statSync(logoFullPath).mtimeMs;
+        if (logoMtime > pdfMtime) {
+          needsRegeneration = true;
+          console.log('Logo changed, regenerating PDF');
+        }
+      }
+    }
+    
+    if (needsRegeneration) {
       const reportForPDF = {
         ...report,
         creatoIl: report.creatoIl.toISOString(),
