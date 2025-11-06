@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const randomString = Math.random().toString(36).substring(7);
     const filename = `${timestamp}-${randomString}.jpg`;
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    const uploadDir = path.join('/data', 'uploads');
     
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
