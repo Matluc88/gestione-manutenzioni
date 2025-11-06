@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     const alpha = await sharp(resized)
       .removeAlpha()
       .greyscale()
-      .threshold(245)
+      .threshold(250)
       .negate()
       .toBuffer();
 
