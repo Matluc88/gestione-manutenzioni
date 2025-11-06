@@ -217,6 +217,8 @@ export async function generateReportPDF(
             const photosPerRow = 2;
             const rowHeight = photoHeight + photoSpacing;
 
+            let lastRowStartY = yPosition;
+            
             validFoto.forEach((foto, fotoIndex) => {
               const column = fotoIndex % photosPerRow;
               const isNewRow = column === 0;
@@ -225,9 +227,14 @@ export async function generateReportPDF(
                 yPosition += rowHeight;
               }
               
+              if (isNewRow) {
+                lastRowStartY = yPosition;
+              }
+              
               if (yPosition + photoHeight > bottomMargin) {
                 doc.addPage();
                 yPosition = 50;
+                lastRowStartY = yPosition;
               }
               
               const xPosition = leftMargin + column * (photoWidth + photoSpacing);
@@ -244,21 +251,39 @@ export async function generateReportPDF(
               }
             });
             
-            yPosition += 10;
+            yPosition = lastRowStartY + photoHeight + 10;
           }
 
           if (att.motivazione) {
+            const bottomMargin = doc.page.height - 50;
+            const labelHeight = 12;
+            const textHeight = doc.fontSize(9).font('regular').heightOfString(att.motivazione, { width: 475 });
+            
+            if (yPosition + labelHeight + textHeight > bottomMargin) {
+              doc.addPage();
+              yPosition = 50;
+            }
+            
             doc.fontSize(9).font('bold').text('Motivazione:', 70, yPosition);
-            yPosition += 12;
+            yPosition += labelHeight;
             doc.fontSize(9).font('regular').text(att.motivazione, 70, yPosition, { width: 475 });
-            yPosition += Math.ceil(att.motivazione.length / 80) * 12 + 5;
+            yPosition += textHeight + 5;
           }
 
           if (att.note) {
+            const bottomMargin = doc.page.height - 50;
+            const labelHeight = 12;
+            const textHeight = doc.fontSize(9).font('regular').heightOfString(att.note, { width: 475 });
+            
+            if (yPosition + labelHeight + textHeight > bottomMargin) {
+              doc.addPage();
+              yPosition = 50;
+            }
+            
             doc.fontSize(9).font('bold').text('Note:', 70, yPosition);
-            yPosition += 12;
+            yPosition += labelHeight;
             doc.fontSize(9).font('regular').text(att.note, 70, yPosition, { width: 475 });
-            yPosition += Math.ceil(att.note.length / 80) * 12 + 5;
+            yPosition += textHeight + 5;
           }
 
           yPosition += 10;
