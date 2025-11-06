@@ -58,9 +58,11 @@ export async function GET(
 
     let pdfPath = report.pdfPath;
 
-    const relPath = pdfPath ? normalizePath(pdfPath) : null;
-    const pdfFullPath = pdfPath ? path.join(process.cwd(), 'public', relPath!) : null;
-    const pdfExists = pdfFullPath && fs.existsSync(pdfFullPath);
+    let pdfFullPath: string | null = null;
+    if (pdfPath) {
+      pdfFullPath = path.join(process.cwd(), 'public', normalizePath(pdfPath));
+    }
+    const pdfExists = !!(pdfFullPath && fs.existsSync(pdfFullPath));
     
     let needsRegeneration = !pdfPath || !pdfExists;
     
@@ -88,12 +90,11 @@ export async function GET(
         where: { id: reportId },
         data: { pdfPath },
       });
+      
+      pdfFullPath = path.join(process.cwd(), 'public', normalizePath(pdfPath));
     }
 
-    const finalRelPath = normalizePath(pdfPath);
-    const pdfFullPath = path.join(process.cwd(), 'public', finalRelPath);
-
-    if (!fs.existsSync(pdfFullPath)) {
+    if (!pdfFullPath || !fs.existsSync(pdfFullPath)) {
       return NextResponse.json({ error: 'PDF non trovato' }, { status: 404 });
     }
 
