@@ -118,7 +118,7 @@ async function networkFirst(request) {
     }
     
     return networkResponse;
-  } catch (error) {
+  } catch {
     console.log('[Service Worker] Network failed, trying cache:', request.url);
     
     const cachedResponse = await caches.match(request);
