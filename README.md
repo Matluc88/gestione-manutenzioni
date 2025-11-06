@@ -292,8 +292,8 @@ Verifica che:
 ### Upload foto fallisce
 
 Verifica che:
-- La cartella `public/uploads/` esista e sia scrivibile
-- Il file sia < 5MB
+- La cartella `/data/uploads/` esista e sia scrivibile (su Render: configurare Render Disk montato su `/data`)
+- Il file sia < 10MB
 - Il formato sia JPG/PNG/WEBP
 
 ## 📄 Licenza

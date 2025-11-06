@@ -45,7 +45,7 @@ export async function DELETE(
     }
 
     const filename = path.basename(foto.filePath);
-    const fullPath = path.join(process.cwd(), 'public', 'uploads', filename);
+    const fullPath = path.join('/data', 'uploads', filename);
     if (existsSync(fullPath)) {
       await unlink(fullPath);
     }

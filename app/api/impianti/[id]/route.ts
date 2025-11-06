@@ -144,11 +144,11 @@ export async function DELETE(
         if (filePath.startsWith('/pdf/') || filePath.startsWith('pdf/')) {
           fullPath = path.join(process.cwd(), 'public', 'pdf', filename);
         } else if (filePath.startsWith('/uploads/') || filePath.startsWith('uploads/')) {
-          fullPath = path.join(process.cwd(), 'public', 'uploads', filename);
+          fullPath = path.join('/data', 'uploads', filename);
         } else {
           continue;
         }
-
+        
         if (existsSync(fullPath)) {
           await unlink(fullPath);
         }
