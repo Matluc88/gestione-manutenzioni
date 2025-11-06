@@ -24,7 +24,11 @@ export default function LogoTab() {
     try {
       const res = await fetch('/api/impostazioni');
       const data = await res.json();
-      setLogoPath(data.logoPath);
+      if (data.logoPath) {
+        setLogoPath(`/api/impostazioni/logo?t=${Date.now()}`);
+      } else {
+        setLogoPath(null);
+      }
     } catch (error) {
       console.error('Errore caricamento logo:', error);
     } finally {
@@ -94,7 +98,7 @@ export default function LogoTab() {
       }
 
       const data = await res.json();
-      setLogoPath(`${data.logoPath}?t=${Date.now()}`);
+      setLogoPath(`/api/impostazioni/logo?t=${Date.now()}`);
       setMessage({ type: 'success', text: '✅ Logo caricato con successo!' });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: unknown) {

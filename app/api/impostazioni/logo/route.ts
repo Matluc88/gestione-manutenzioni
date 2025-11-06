@@ -6,6 +6,31 @@ import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 
+export async function GET() {
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'logo', 'logo.png');
+    
+    if (!fs.existsSync(logoPath)) {
+      return NextResponse.json({ error: 'Logo non trovato' }, { status: 404 });
+    }
+
+    const logoBuffer = fs.readFileSync(logoPath);
+
+    return new NextResponse(logoBuffer, {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
+  } catch (error) {
+    console.error('Errore lettura logo:', error);
+    return NextResponse.json(
+      { error: 'Errore durante lettura del logo' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   
@@ -55,13 +80,27 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     
     const outputPath = path.join(logoDir, 'logo.png');
-    await sharp(buffer)
+    
+    const resized = await sharp(buffer)
       .resize(400, null, {
         fit: 'inside',
         withoutEnlargement: true,
       })
+      .removeAlpha()
+      .toBuffer();
+
+    const { data: alpha, info } = await sharp(resized)
+      .toColourspace('b-w')
+      .threshold(245)
+      .negate()
+      .toBuffer({ resolveWithObject: true });
+
+    await sharp(resized)
+      .joinChannel(alpha)
       .png({ quality: 90 })
       .toFile(outputPath);
+    
+    console.log('Logo written to:', outputPath, 'exists:', fs.existsSync(outputPath));
 
     const logoPath = '/logo/logo.png';
 
