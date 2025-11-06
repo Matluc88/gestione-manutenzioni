@@ -194,7 +194,7 @@ export async function generateReportPDF(
           yPosition += 15;
 
           const validFoto = att.foto.filter(foto => {
-            const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
+            const fotoFullPath = path.join('/data', normalizePath(foto.filePath));
             return fs.existsSync(fotoFullPath);
           });
 
@@ -239,7 +239,7 @@ export async function generateReportPDF(
               
               const xPosition = leftMargin + column * (photoWidth + photoSpacing);
               
-              const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
+              const fotoFullPath = path.join('/data', normalizePath(foto.filePath));
               try {
                 doc.image(fotoFullPath, xPosition, yPosition, { 
                   width: photoWidth, 
