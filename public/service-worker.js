@@ -12,12 +12,6 @@ const PRECACHE_URLS = [
   '/images/onem-logo-transparent.png'
 ];
 
-const CACHE_STRATEGIES = {
-  images: IMAGE_CACHE,
-  static: CACHE_NAME,
-  dynamic: RUNTIME_CACHE
-};
-
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing...');
   
@@ -108,8 +102,8 @@ async function cacheFirst(request, cacheName) {
     }
     
     return networkResponse;
-  } catch (error) {
-    console.error('[Service Worker] Cache first failed:', error);
+  } catch {
+    console.error('[Service Worker] Cache first failed');
     return offlineFallback(request);
   }
 }
@@ -137,8 +131,6 @@ async function networkFirst(request) {
 }
 
 function offlineFallback(request) {
-  const url = new URL(request.url);
-  
   if (request.destination === 'document') {
     return caches.match('/offline.html').then((response) => {
       if (response) {

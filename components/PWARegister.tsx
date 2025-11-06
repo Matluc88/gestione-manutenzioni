@@ -45,7 +45,10 @@ export default function PWARegister() {
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      (window as any).deferredPrompt = e;
+      interface WindowWithPrompt extends Window {
+        deferredPrompt?: Event;
+      }
+      (window as WindowWithPrompt).deferredPrompt = e;
       console.log('PWA install prompt ready');
     };
 
@@ -53,7 +56,10 @@ export default function PWARegister() {
 
     window.addEventListener('appinstalled', () => {
       console.log('PWA installed successfully');
-      (window as any).deferredPrompt = null;
+      interface WindowWithPrompt extends Window {
+        deferredPrompt?: Event | null;
+      }
+      (window as WindowWithPrompt).deferredPrompt = null;
     });
 
     return () => {
