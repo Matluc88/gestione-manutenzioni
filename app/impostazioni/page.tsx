@@ -104,52 +104,54 @@ export default function ImpostazioniPage() {
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
+            <nav className="flex -mb-px overflow-x-auto">
               <button
                 onClick={() => setActiveTab('dati')}
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition whitespace-nowrap ${
                   activeTab === 'dati'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <Building size={20} />
-                Dati Azienda
+                <Building size={18} className="sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Dati Azienda</span>
+                <span className="sm:hidden">Dati</span>
               </button>
               
               <button
                 onClick={() => setActiveTab('logo')}
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition whitespace-nowrap ${
                   activeTab === 'logo'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <ImageIcon size={20} />
+                <ImageIcon size={18} className="sm:w-5 sm:h-5" />
                 Logo
               </button>
               
               <button
                 onClick={() => setActiveTab('utenti')}
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition whitespace-nowrap ${
                   activeTab === 'utenti'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <Users size={20} />
-                Gestione Utenti
+                <Users size={18} className="sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Gestione Utenti</span>
+                <span className="sm:hidden">Utenti</span>
               </button>
               
               <button
                 onClick={() => setActiveTab('componenti')}
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition whitespace-nowrap ${
                   activeTab === 'componenti'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <Package size={20} />
+                <Package size={18} className="sm:w-5 sm:h-5" />
                 Componenti
               </button>
             </nav>
