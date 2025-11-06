@@ -119,12 +119,12 @@ export async function DELETE(
     });
 
     const filesToDelete: string[] = [];
-    reports.forEach((report) => {
+    reports.forEach((report: { pdfPath: string | null; attivita: { foto: { filePath: string }[] }[] }) => {
       if (report.pdfPath) {
         filesToDelete.push(report.pdfPath);
       }
-      report.attivita.forEach((attivita) => {
-        attivita.foto.forEach((foto) => {
+      report.attivita.forEach((attivita: { foto: { filePath: string }[] }) => {
+        attivita.foto.forEach((foto: { filePath: string }) => {
           filesToDelete.push(foto.filePath);
         });
       });
