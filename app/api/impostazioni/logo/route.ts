@@ -86,18 +86,19 @@ export async function POST(req: NextRequest) {
         fit: 'inside',
         withoutEnlargement: true,
       })
-      .removeAlpha()
+      .ensureAlpha()
       .toBuffer();
 
-    const { data: alpha, info } = await sharp(resized)
-      .toColourspace('b-w')
+    const alpha = await sharp(resized)
+      .removeAlpha()
+      .greyscale()
       .threshold(245)
       .negate()
-      .toBuffer({ resolveWithObject: true });
+      .toBuffer();
 
     await sharp(resized)
       .joinChannel(alpha)
-      .png({ quality: 90 })
+      .png({ compressionLevel: 9 })
       .toFile(outputPath);
     
     console.log('Logo written to:', outputPath, 'exists:', fs.existsSync(outputPath));

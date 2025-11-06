@@ -242,11 +242,7 @@ export async function generateReportPDF(
               }
             });
             
-            const totalRows = Math.ceil(validFoto.length / photosPerRow);
-            const lastRowPhotos = validFoto.length % photosPerRow || photosPerRow;
-            if (lastRowPhotos > 0) {
-              yPosition += photoHeight + 10;
-            }
+            yPosition += 10;
           }
 
           if (att.motivazione) {
@@ -270,11 +266,6 @@ export async function generateReportPDF(
             yPosition += 15;
           }
         });
-      }
-
-      if (yPosition > 700) {
-        doc.addPage();
-        yPosition = 50;
       }
 
       const range = doc.bufferedPageRange();
