@@ -75,13 +75,27 @@ export async function generateReportPDF(
       doc.font('regular');
       doc.addPage();
 
-      let yPosition = 50;
+      const topMargin = 50;
+      const bottomMargin = doc.page.height - 50;
+      let yPosition = topMargin;
+
+      const ensureSpace = (needed: number) => {
+        if (yPosition + needed > bottomMargin) {
+          doc.addPage();
+          yPosition = topMargin;
+        }
+      };
+
+      let headerLogoPath: string | null = null;
+      let headerLogoY = yPosition;
 
       if (impostazioni.logoPath) {
         const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
         if (fs.existsSync(logoFullPath)) {
           try {
             doc.image(logoFullPath, 50, yPosition, { width: 100 });
+            headerLogoPath = logoFullPath;
+            headerLogoY = yPosition;
             yPosition += 110;
           } catch (err) {
             console.error('Errore caricamento logo:', err);
@@ -106,7 +120,8 @@ export async function generateReportPDF(
         yPosition += 20;
       }
 
-      doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(1);
       yPosition += 30;
 
       doc.fontSize(18).font('bold').text(
@@ -142,37 +157,27 @@ export async function generateReportPDF(
       }
 
       yPosition += 10;
-      doc.moveTo(50, yPosition).lineTo(545, yPosition).stroke();
-      yPosition += 20;
-
-      doc.fontSize(14).font('bold').text('ATTIVITÀ', 50, yPosition);
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(1);
       yPosition += 20;
 
       if (report.attivita.length === 0) {
         doc.fontSize(10).font('regular').text('Nessuna attività registrata', 50, yPosition);
       } else {
         report.attivita.forEach((att, index) => {
-          if (yPosition > 700) {
-            doc.addPage();
-            yPosition = 50;
-          }
+          ensureSpace(80);
+
+          const taskTitle = att.componente 
+            ? `${att.componente.nome} - ${att.descrizione}`
+            : att.descrizione;
 
           doc.fontSize(11).font('bold').text(
-            `${index + 1}. ${att.descrizione}`,
+            `${index + 1}. ${taskTitle}`,
             50,
             yPosition,
             { width: 495 }
           );
           yPosition += 20;
-
-          if (att.componente) {
-            doc.fontSize(9).font('regular').text(
-              `Componente: ${att.componente.nome}`,
-              70,
-              yPosition
-            );
-            yPosition += 15;
-          }
 
           const statoLabel = att.stato === 'FATTO' ? '✓ Fatto' : 
                             att.stato === 'NON_FATTO' ? '✗ Non fatto' : 
@@ -185,79 +190,100 @@ export async function generateReportPDF(
           doc.fillColor('#000000');
           yPosition += 15;
 
+          const storageRoot = fs.existsSync('/data') ? '/data' : path.join(process.cwd(), 'public');
+          const validFoto = att.foto.filter(foto => {
+            const fotoFullPath = path.join(storageRoot, normalizePath(foto.filePath));
+            return fs.existsSync(fotoFullPath);
+          });
+
+          if (validFoto.length > 0) {
+            const headerHeight = 15;
+            ensureSpace(headerHeight);
+            
+            doc.fontSize(9).font('bold').text(`Foto (${validFoto.length}):`, 70, yPosition);
+            yPosition += 15;
+
+            const photoWidth = 242;
+            const photoHeight = 182;
+            const photoSpacing = 10;
+            const leftMargin = 50;
+            const photosPerRow = 2;
+            const rowHeight = photoHeight + photoSpacing;
+
+            let lastRowStartY = yPosition;
+            
+            validFoto.forEach((foto, fotoIndex) => {
+              const column = fotoIndex % photosPerRow;
+              const isNewRow = column === 0;
+              
+              if (isNewRow && fotoIndex > 0) {
+                yPosition += rowHeight;
+              }
+              
+              if (isNewRow) {
+                lastRowStartY = yPosition;
+              }
+              
+              if (yPosition + photoHeight > bottomMargin) {
+                doc.addPage();
+                yPosition = topMargin;
+                lastRowStartY = yPosition;
+              }
+              
+              const xPosition = leftMargin + column * (photoWidth + photoSpacing);
+              
+              const fotoFullPath = path.join(storageRoot, normalizePath(foto.filePath));
+              try {
+                doc.image(fotoFullPath, xPosition, yPosition, { 
+                  width: photoWidth, 
+                  height: photoHeight, 
+                  fit: [photoWidth, photoHeight] 
+                });
+              } catch (err) {
+                console.error(`Errore caricamento foto ${foto.fileName}:`, err);
+              }
+            });
+            
+            yPosition = lastRowStartY + photoHeight + 10;
+          }
+
           if (att.motivazione) {
+            const labelHeight = 12;
+            const textHeight = doc.fontSize(9).font('regular').heightOfString(att.motivazione, { width: 475 });
+            const totalNeeded = labelHeight + textHeight + 5 + 6;
+            
+            ensureSpace(totalNeeded);
+            
             doc.fontSize(9).font('bold').text('Motivazione:', 70, yPosition);
-            yPosition += 12;
+            yPosition += labelHeight;
             doc.fontSize(9).font('regular').text(att.motivazione, 70, yPosition, { width: 475 });
-            yPosition += Math.ceil(att.motivazione.length / 80) * 12 + 5;
+            yPosition += textHeight + 5;
           }
 
           if (att.note) {
+            const labelHeight = 12;
+            const textHeight = doc.fontSize(9).font('regular').heightOfString(att.note, { width: 475 });
+            const totalNeeded = labelHeight + textHeight + 5 + 6;
+            
+            ensureSpace(totalNeeded);
+            
             doc.fontSize(9).font('bold').text('Note:', 70, yPosition);
-            yPosition += 12;
+            yPosition += labelHeight;
             doc.fontSize(9).font('regular').text(att.note, 70, yPosition, { width: 475 });
-            yPosition += Math.ceil(att.note.length / 80) * 12 + 5;
-          }
-
-          if (att.foto.length > 0) {
-            const bottomMargin = doc.page.height - 50;
-            const headerHeight = 15;
-            
-            if (yPosition + headerHeight > bottomMargin) {
-              doc.addPage();
-              yPosition = 50;
-            }
-            
-            doc.fontSize(9).font('bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
-            yPosition += 15;
-
-            att.foto.forEach((foto) => {
-              const imageBlockHeight = 175;
-              
-              if (yPosition + imageBlockHeight > bottomMargin) {
-                doc.addPage();
-                yPosition = 50;
-              }
-              
-              const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
-              if (fs.existsSync(fotoFullPath)) {
-                try {
-                  doc.image(fotoFullPath, 70, yPosition, { width: 200, height: 150, fit: [200, 150] });
-                  doc.fontSize(8).font('regular').text(foto.fileName, 70, yPosition + 155, { width: 200 });
-                  yPosition += 175;
-                } catch (err) {
-                  console.error(`Errore caricamento foto ${foto.fileName}:`, err);
-                  doc.fontSize(8).font('regular').text(
-                    `[Foto non disponibile: ${foto.fileName}]`,
-                    70,
-                    yPosition
-                  );
-                  yPosition += 15;
-                }
-              } else {
-                doc.fontSize(8).font('regular').text(
-                  `[File non trovato: ${foto.fileName}]`,
-                  70,
-                  yPosition
-                );
-                yPosition += 15;
-              }
-            });
+            yPosition += textHeight + 5;
           }
 
           yPosition += 10;
-          if (yPosition < 750) {
-            doc.moveTo(50, yPosition).lineTo(545, yPosition).strokeColor('#e5e7eb').stroke();
-            doc.strokeColor('#000000');
+          if (yPosition < bottomMargin - 15) {
+            doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor('#e5e7eb').stroke();
+            doc.strokeColor('#000000').lineWidth(1);
             yPosition += 15;
           }
         });
       }
 
-      if (yPosition > 700) {
-        doc.addPage();
-        yPosition = 50;
-      }
+      const footerHeight = 40;
+      ensureSpace(footerHeight);
 
       yPosition += 20;
       doc.fontSize(9).font('regular').text(
@@ -276,10 +302,10 @@ export async function generateReportPDF(
           try {
             const pageWidth = doc.page.width;
             const pageHeight = doc.page.height;
-            const watermarkWidth = 300;
-            const watermarkHeight = 300;
-            const xPosition = (pageWidth - watermarkWidth) / 2;
-            const yPosition = (pageHeight - watermarkHeight) / 2;
+            const watermarkWidth = 540;
+            const watermarkHeight = 540;
+            const xPosition = Math.round((pageWidth - watermarkWidth) / 2);
+            const yPosition = Math.round((pageHeight - watermarkHeight) / 2);
             
             doc.save();
             doc.opacity(0.12);
@@ -294,12 +320,23 @@ export async function generateReportPDF(
           }
         }
         
-        doc.fontSize(8).font('regular').text(
-          `Pagina ${i - range.start + 1} di ${range.count}`,
-          50,
-          doc.page.height - 50,
-          { align: 'center', width: 495 }
-        );
+        const pageNumText = `Pagina ${i - range.start + 1} di ${range.count}`;
+        doc.save();
+        doc.font('regular').fontSize(8).fillColor('#000000');
+        const textWidth = doc.widthOfString(pageNumText);
+        const x = Math.round((doc.page.width - textWidth) / 2);
+        const y = doc.page.height - 40;
+        doc.text(pageNumText, x, y, { lineBreak: false });
+        doc.restore();
+      }
+      
+      if (headerLogoPath && range.count > 0) {
+        doc.switchToPage(range.start);
+        try {
+          doc.image(headerLogoPath, 50, headerLogoY, { width: 100 });
+        } catch (err) {
+          console.error('Errore re-drawing header logo:', err);
+        }
       }
 
       doc.end();

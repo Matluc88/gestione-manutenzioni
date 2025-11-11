@@ -22,6 +22,9 @@ export async function GET(
   try {
     const { id } = await params;
     const reportId = parseInt(id);
+    
+    const { searchParams } = new URL(req.url);
+    const forceRegenerate = searchParams.get('force') === '1';
 
     const report = await prisma.report.findUnique({
       where: { id: reportId },
@@ -57,6 +60,19 @@ export async function GET(
     }
 
     let pdfPath = report.pdfPath;
+
+    if (forceRegenerate && pdfPath) {
+      const relPath = normalizePath(pdfPath);
+      const oldPdfPath = path.join(process.cwd(), 'public', relPath);
+      if (fs.existsSync(oldPdfPath)) {
+        try {
+          fs.unlinkSync(oldPdfPath);
+        } catch (err) {
+          console.error('Error deleting old PDF:', err);
+        }
+      }
+      pdfPath = null;
+    }
 
     const relPath = pdfPath ? normalizePath(pdfPath) : null;
     if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', relPath!))) {
