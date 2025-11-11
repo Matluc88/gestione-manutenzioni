@@ -281,21 +281,32 @@ export default function ReportModal({ reportId, onClose }: ReportModalProps) {
                               Foto ({att.foto.length}):
                             </p>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                              {att.foto.map((foto) => (
-                                <div key={foto.id} className="group relative">
-                                  <Image
-                                    src={foto.filePath}
-                                    alt={foto.fileName}
-                                    width={200}
-                                    height={200}
-                                    className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition"
-                                    onClick={() => window.open(foto.filePath, '_blank')}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1 truncate">
-                                    {foto.fileName}
-                                  </p>
-                                </div>
-                              ))}
+                              {att.foto.map((foto) => {
+                                const storedFilename = foto.filePath?.split('/').pop() || '';
+                                const imageUrl = storedFilename ? `/api/uploads/${encodeURIComponent(storedFilename)}` : '';
+                                return (
+                                  <div key={foto.id} className="group relative">
+                                    {imageUrl ? (
+                                      <Image
+                                        src={imageUrl}
+                                        alt={foto.fileName}
+                                        width={200}
+                                        height={200}
+                                        className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition"
+                                        onClick={() => window.open(imageUrl, '_blank')}
+                                        unoptimized
+                                      />
+                                    ) : (
+                                      <div className="w-full h-32 flex items-center justify-center bg-gray-100 rounded-lg border border-gray-200">
+                                        <span className="text-xs text-gray-500">Non disponibile</span>
+                                      </div>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1 truncate">
+                                      {foto.fileName}
+                                    </p>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         )}

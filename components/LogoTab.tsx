@@ -24,7 +24,11 @@ export default function LogoTab() {
     try {
       const res = await fetch('/api/impostazioni');
       const data = await res.json();
-      setLogoPath(data.logoPath);
+      if (data.logoPath) {
+        setLogoPath(`/api/impostazioni/logo?t=${Date.now()}`);
+      } else {
+        setLogoPath(null);
+      }
     } catch (error) {
       console.error('Errore caricamento logo:', error);
     } finally {
@@ -94,7 +98,7 @@ export default function LogoTab() {
       }
 
       const data = await res.json();
-      setLogoPath(data.logoPath);
+      setLogoPath(`/api/impostazioni/logo?t=${Date.now()}`);
       setMessage({ type: 'success', text: '✅ Logo caricato con successo!' });
       setTimeout(() => setMessage(null), 3000);
     } catch (error: unknown) {
@@ -171,12 +175,16 @@ export default function LogoTab() {
 
           <div className="flex justify-center bg-white border-2 border-gray-300 rounded-lg p-8">
             <Image
+              key={logoPath}
               src={logoPath}
               alt="Logo aziendale"
               width={400}
               height={200}
               className="max-h-48 w-auto object-contain"
               unoptimized
+              onError={(e) => {
+                console.error('Errore caricamento immagine logo:', e);
+              }}
             />
           </div>
         </div>

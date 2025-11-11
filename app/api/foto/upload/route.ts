@@ -26,6 +26,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'attivitaId mancante' }, { status: 400 });
     }
 
+    const maxFileSize = 10 * 1024 * 1024;
+    if (file.size > maxFileSize) {
+      return NextResponse.json(
+        { error: 'File troppo grande. Massimo 10MB per foto' },
+        { status: 400 }
+      );
+    }
+
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -50,7 +58,7 @@ export async function POST(req: NextRequest) {
     const randomString = Math.random().toString(36).substring(7);
     const filename = `${timestamp}-${randomString}.jpg`;
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    const uploadDir = path.join('/data', 'uploads');
     
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });

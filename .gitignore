@@ -49,3 +49,6 @@ public/uploads/*
 # Logo aziendale
 public/logo/*
 !public/logo/.gitkeep
+
+# Persistent data directory (mounted Render Disk)
+/data/

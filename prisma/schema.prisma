@@ -122,6 +122,7 @@ model Impostazioni {
   indirizzo         String?
   telefono          String?
   email             String?
+  partitaIva        String?
   logoPath          String?
   intestazionePdf   String  @db.Text @default("Report generato automaticamente")
   
