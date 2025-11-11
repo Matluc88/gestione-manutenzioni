@@ -124,7 +124,7 @@ model Impostazioni {
   email             String?
   partitaIva        String?
   logoPath          String?
-  intestazionePdf   String  @db.Text @default("Report generato automaticamente")
+  intestazionePdf   String  @db.Text @default("")
   
   @@map("impostazioni")
 }
