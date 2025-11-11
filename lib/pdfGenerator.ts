@@ -328,12 +328,14 @@ export async function generateReportPDF(
           }
         }
         
-        doc.fontSize(8).font('regular').text(
-          `Pagina ${i - range.start + 1} di ${range.count}`,
-          50,
-          doc.page.height - 40,
-          { align: 'center', width: 495, lineBreak: false }
-        );
+        const pageNumText = `Pagina ${i - range.start + 1} di ${range.count}`;
+        doc.save();
+        doc.font('regular').fontSize(8).fillColor('#000000');
+        const textWidth = doc.widthOfString(pageNumText);
+        const x = Math.round((doc.page.width - textWidth) / 2);
+        const y = doc.page.height - 40;
+        doc.text(pageNumText, x, y, { lineBreak: false });
+        doc.restore();
       }
       
       if (headerLogoPath && range.count > 0) {
