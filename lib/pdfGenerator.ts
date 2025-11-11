@@ -4,6 +4,60 @@ import path from 'path';
 
 const normalizePath = (p: string) => (p.startsWith('/') ? p.slice(1) : p);
 
+/**
+ * Validates if a font file has the correct TTF/OTF format by checking magic bytes
+ * @param fontPath - Path to the font file
+ * @returns true if valid TTF/OTF, false otherwise
+ */
+function validateFontFile(fontPath: string): boolean {
+  try {
+    if (!fs.existsSync(fontPath)) {
+      console.error(`Font file not found: ${fontPath}`);
+      return false;
+    }
+
+    const buffer = fs.readFileSync(fontPath);
+    if (buffer.length < 4) {
+      console.error(`Font file too small: ${fontPath}`);
+      return false;
+    }
+
+    const magicBytes = buffer.slice(0, 4);
+    const hex = magicBytes.toString('hex');
+    
+    const validFormats = ['00010000', '4f54544f', '74746366'];
+    
+    if (!validFormats.includes(hex)) {
+      console.error(`Invalid font format for ${fontPath}. Magic bytes: ${hex}`);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Error validating font file ${fontPath}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Loads a font with fallback to alternative fonts if the primary font is invalid
+ * @param primaryPath - Primary font file path
+ * @param fallbackPaths - Array of fallback font file paths
+ * @returns Buffer of the first valid font found
+ */
+function loadFontWithFallback(primaryPath: string, fallbackPaths: string[]): Buffer {
+  const allPaths = [primaryPath, ...fallbackPaths];
+  
+  for (const fontPath of allPaths) {
+    if (validateFontFile(fontPath)) {
+      console.log(`Loading font: ${fontPath}`);
+      return fs.readFileSync(fontPath);
+    }
+  }
+  
+  throw new Error(`No valid font found. Tried: ${allPaths.join(', ')}`);
+}
+
 const theme = {
   primary: '#003366',
   accent: '#FF9900',
@@ -75,8 +129,23 @@ export async function generateReportPDF(
       const filePath = path.join(pdfDir, fileName);
       const relativePath = `pdf/${fileName}`;
 
-      const fontBody = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'OpenSans-Regular.ttf'));
-      const fontTitle = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'Montserrat-Bold.ttf'));
+      const fontsDir = path.join(process.cwd(), 'public', 'fonts');
+      
+      const fontBody = loadFontWithFallback(
+        path.join(fontsDir, 'OpenSans-Regular.ttf'),
+        [
+          path.join(fontsDir, 'NotoSans-Regular.ttf'),
+          path.join(fontsDir, 'LiberationSans-Regular.ttf')
+        ]
+      );
+      
+      const fontTitle = loadFontWithFallback(
+        path.join(fontsDir, 'Montserrat-Bold.ttf'),
+        [
+          path.join(fontsDir, 'NotoSans-Bold.ttf'),
+          path.join(fontsDir, 'LiberationSans-Bold.ttf')
+        ]
+      );
 
       const doc = new PDFDocument({ margin: 50, size: 'A4', autoFirstPage: false, bufferPages: true });
       const stream = fs.createWriteStream(filePath);
