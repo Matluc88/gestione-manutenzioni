@@ -1,0 +1,17 @@
+# Ensure font files are treated as binary to prevent corruption
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# Explicitly mark fonts directory as binary
+public/fonts/** -text
+
+# Ensure images are treated as binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.webp binary
