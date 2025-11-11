@@ -256,14 +256,11 @@ export async function generateReportPDF(
           }
 
           if (att.motivazione) {
-            const bottomMargin = doc.page.height - 50;
             const labelHeight = 12;
             const textHeight = doc.fontSize(9).font('regular').heightOfString(att.motivazione, { width: 475 });
+            const totalNeeded = labelHeight + textHeight + 5 + 6;
             
-            if (yPosition + labelHeight + textHeight > bottomMargin) {
-              doc.addPage();
-              yPosition = 50;
-            }
+            ensureSpace(totalNeeded);
             
             doc.fontSize(9).font('bold').text('Motivazione:', 70, yPosition);
             yPosition += labelHeight;
@@ -272,14 +269,11 @@ export async function generateReportPDF(
           }
 
           if (att.note) {
-            const bottomMargin = doc.page.height - 50;
             const labelHeight = 12;
             const textHeight = doc.fontSize(9).font('regular').heightOfString(att.note, { width: 475 });
+            const totalNeeded = labelHeight + textHeight + 5 + 6;
             
-            if (yPosition + labelHeight + textHeight > bottomMargin) {
-              doc.addPage();
-              yPosition = 50;
-            }
+            ensureSpace(totalNeeded);
             
             doc.fontSize(9).font('bold').text('Note:', 70, yPosition);
             yPosition += labelHeight;
@@ -288,7 +282,7 @@ export async function generateReportPDF(
           }
 
           yPosition += 10;
-          if (yPosition < 750) {
+          if (yPosition < bottomMargin - 15) {
             doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor('#e5e7eb').stroke();
             doc.strokeColor('#000000').lineWidth(1);
             yPosition += 15;
@@ -296,6 +290,16 @@ export async function generateReportPDF(
         });
       }
 
+      const footerHeight = 40;
+      ensureSpace(footerHeight);
+
+      yPosition += 20;
+      doc.fontSize(9).font('regular').text(
+        impostazioni.intestazionePdf,
+        50,
+        yPosition,
+        { align: 'center', width: 495 }
+      );
 
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {

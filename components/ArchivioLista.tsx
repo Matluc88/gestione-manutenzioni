@@ -156,41 +156,41 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
               )}
             </div>
 
-            <div className="flex flex-row md:flex-col gap-2">
+            <div className="flex flex-row md:flex-col gap-2 flex-wrap">
               <button
                 onClick={() => onView(r.id)}
-                className="flex items-center justify-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
+                className="flex items-center justify-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition shrink-0"
                 title="Visualizza dettagli"
               >
                 <Eye size={18} />
-                <span className="text-sm font-medium md:hidden lg:inline">Visualizza</span>
+                <span className="text-sm font-medium hidden md:inline">Visualizza</span>
               </button>
 
               {r.stato === 'COMPLETATO' && (
                 <button
                   onClick={() => handleDownload(r.id)}
-                  className="flex items-center justify-center gap-2 px-3 py-2 text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition"
+                  className="flex items-center justify-center gap-2 px-3 py-2 text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition shrink-0"
                   title="Scarica PDF"
                 >
                   <Download size={18} />
-                  <span className="text-sm font-medium md:hidden lg:inline">Scarica</span>
+                  <span className="text-sm font-medium hidden md:inline">Scarica</span>
                 </button>
               )}
 
               <button
                 onClick={() => handleEdit(r.id, r.tipo, r.impiantoId)}
-                className="flex items-center justify-center gap-2 px-3 py-2 text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition"
+                className="flex items-center justify-center gap-2 px-3 py-2 text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition shrink-0"
                 title={r.stato === 'COMPLETATO' ? 'Modifica report' : 'Modifica bozza'}
               >
                 <Edit size={18} />
-                <span className="text-sm font-medium md:hidden lg:inline">Modifica</span>
+                <span className="text-sm font-medium hidden md:inline">Modifica</span>
               </button>
 
               {isAdmin && (
                 <button
                   onClick={() => handleDelete(r.id)}
                   disabled={deletingId === r.id}
-                  className="flex items-center justify-center gap-2 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   title="Elimina report"
                 >
                   {deletingId === r.id ? (
@@ -198,7 +198,7 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
                   ) : (
                     <Trash2 size={18} />
                   )}
-                  <span className="text-sm font-medium md:hidden lg:inline">Elimina</span>
+                  <span className="text-sm font-medium hidden md:inline">Elimina</span>
                 </button>
               )}
             </div>
