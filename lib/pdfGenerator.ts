@@ -55,6 +55,7 @@ interface Impostazioni {
   indirizzo: string | null;
   telefono: string | null;
   email: string | null;
+  partitaIva: string | null;
   logoPath: string | null;
   intestazionePdf: string;
 }
@@ -87,18 +88,35 @@ export async function generateReportPDF(
       doc.font('body');
       doc.addPage();
 
-      let yPosition = 50;
+      const topMargin = 50;
+      const bottomMargin = doc.page.height - 50;
+      let yPosition = topMargin;
 
+      const ensureSpace = (needed: number) => {
+        if (yPosition + needed > bottomMargin) {
+          doc.addPage();
+          yPosition = topMargin;
+        }
+      };
+
+      let headerLogoPath: string | null = null;
+      let headerLogoY = yPosition;
+      
       if (impostazioni.logoPath) {
         const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
+        console.log('Header logo path:', logoFullPath, 'exists:', fs.existsSync(logoFullPath));
         if (fs.existsSync(logoFullPath)) {
           try {
             doc.image(logoFullPath, 50, yPosition, { width: 100 });
+            headerLogoPath = logoFullPath;
+            headerLogoY = yPosition;
             yPosition += 110;
           } catch (err) {
             console.error('Errore caricamento logo:', err);
             yPosition += 20;
           }
+        } else {
+          console.warn('Logo file not found at:', logoFullPath);
         }
       }
 
@@ -110,6 +128,11 @@ export async function generateReportPDF(
         yPosition += 15;
       }
 
+      if (impostazioni.partitaIva) {
+        doc.fontSize(10).font('body').fillColor(theme.textDark).text(`PARTITA IVA ${impostazioni.partitaIva}`, 50, yPosition);
+        yPosition += 15;
+      }
+
       const contactInfo = [];
       if (impostazioni.telefono) contactInfo.push(`Tel: ${impostazioni.telefono}`);
       if (impostazioni.email) contactInfo.push(`Email: ${impostazioni.email}`);
@@ -118,7 +141,8 @@ export async function generateReportPDF(
         yPosition += 20;
       }
 
-      doc.moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
+      doc.lineWidth(1);
       yPosition += 30;
 
       doc.fontSize(18).font('title').fillColor(theme.primary).text(
@@ -154,34 +178,29 @@ export async function generateReportPDF(
       }
 
       yPosition += 10;
-      doc.moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
-      yPosition += 20;
-
-      doc.fontSize(14).font('title').fillColor(theme.primary).text('ATTIVITÀ', 50, yPosition);
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
+      doc.lineWidth(1);
       yPosition += 20;
 
       if (report.attivita.length === 0) {
         doc.fontSize(10).font('body').fillColor(theme.textDark).text('Nessuna attività registrata', 50, yPosition);
       } else {
         report.attivita.forEach((att, index) => {
-          if (yPosition > 700) {
-            doc.addPage();
-            yPosition = 50;
-          }
+          ensureSpace(80);
+
+          const taskTitle = att.componente 
+            ? `${att.componente.nome} - ${att.descrizione}`
+            : att.descrizione;
 
           doc.fontSize(11).font('title').fillColor(theme.textDark);
-          const descrizione = `${index + 1}. ${att.descrizione}`;
-          const descHeight = doc.heightOfString(descrizione, { width: 495 });
-          doc.text(descrizione, 50, yPosition, { width: 495 });
-          yPosition += descHeight + 6;
-
-          if (att.componente) {
-            doc.fontSize(9).font('body').fillColor(theme.textDark);
-            const componenteText = `Componente: ${att.componente.nome}`;
-            const compHeight = doc.heightOfString(componenteText, { width: 475 });
-            doc.text(componenteText, 70, yPosition);
-            yPosition += compHeight + 4;
-          }
+          const taskHeight = doc.heightOfString(`${index + 1}. ${taskTitle}`, { width: 495 });
+          doc.text(
+            `${index + 1}. ${taskTitle}`,
+            50,
+            yPosition,
+            { width: 495 }
+          );
+          yPosition += taskHeight + 6;
 
           const statoLabel = att.stato === 'FATTO' ? 'FATTO' : 
                             att.stato === 'NON_FATTO' ? 'NON FATTO' : 
@@ -197,90 +216,99 @@ export async function generateReportPDF(
           doc.fillColor(theme.textDark);
           yPosition += statoHeight + 4;
 
-          if (att.motivazione) {
-            doc.fontSize(9).font('title').fillColor(theme.textDark);
-            const motivazioneLabel = 'Motivazione:';
-            const motivazioneLabelHeight = doc.heightOfString(motivazioneLabel);
-            doc.text(motivazioneLabel, 70, yPosition);
-            yPosition += motivazioneLabelHeight + 2;
+          const validFoto = att.foto.filter(foto => {
+            const fotoFullPath = path.join('/data', normalizePath(foto.filePath));
+            return fs.existsSync(fotoFullPath);
+          });
+
+          if (validFoto.length > 0) {
+            const headerHeight = 15;
+            ensureSpace(headerHeight);
             
-            doc.fontSize(9).font('body').fillColor(theme.textDark);
-            const motivazioneHeight = doc.heightOfString(att.motivazione, { width: 475 });
-            doc.text(att.motivazione, 70, yPosition, { width: 475 });
-            yPosition += motivazioneHeight + 5;
+            doc.fontSize(9).font('title').fillColor(theme.textDark).text(`Foto (${validFoto.length}):`, 70, yPosition);
+            yPosition += 15;
+
+            const photoWidth = 242;
+            const photoHeight = 182;
+            const photoSpacing = 10;
+            const leftMargin = 50;
+            const photosPerRow = 2;
+            const rowHeight = photoHeight + photoSpacing;
+
+            let lastRowStartY = yPosition;
+            
+            validFoto.forEach((foto, fotoIndex) => {
+              const column = fotoIndex % photosPerRow;
+              const isNewRow = column === 0;
+              
+              if (isNewRow && fotoIndex > 0) {
+                yPosition += rowHeight;
+              }
+              
+              if (isNewRow) {
+                lastRowStartY = yPosition;
+              }
+              
+              if (yPosition + photoHeight > bottomMargin) {
+                doc.addPage();
+                yPosition = topMargin;
+                lastRowStartY = yPosition;
+              }
+              
+              const xPosition = leftMargin + column * (photoWidth + photoSpacing);
+              
+              const fotoFullPath = path.join('/data', normalizePath(foto.filePath));
+              try {
+                doc.image(fotoFullPath, xPosition, yPosition, { 
+                  width: photoWidth, 
+                  height: photoHeight, 
+                  fit: [photoWidth, photoHeight] 
+                });
+              } catch (err) {
+                console.error(`Errore caricamento foto ${foto.fileName}:`, err);
+              }
+            });
+            
+            yPosition = lastRowStartY + photoHeight + 10;
+          }
+
+          if (att.motivazione) {
+            const labelHeight = 12;
+            const textHeight = doc.fontSize(9).font('body').heightOfString(att.motivazione, { width: 475 });
+            const totalNeeded = labelHeight + textHeight + 5 + 6;
+            
+            ensureSpace(totalNeeded);
+            
+            doc.fontSize(9).font('title').fillColor(theme.textDark).text('Motivazione:', 70, yPosition);
+            yPosition += labelHeight;
+            doc.fontSize(9).font('body').fillColor(theme.textDark).text(att.motivazione, 70, yPosition, { width: 475 });
+            yPosition += textHeight + 5;
           }
 
           if (att.note) {
-            doc.fontSize(9).font('title').fillColor(theme.textDark);
-            const noteLabel = 'Note:';
-            const noteLabelHeight = doc.heightOfString(noteLabel);
-            doc.text(noteLabel, 70, yPosition);
-            yPosition += noteLabelHeight + 2;
+            const labelHeight = 12;
+            const textHeight = doc.fontSize(9).font('body').heightOfString(att.note, { width: 475 });
+            const totalNeeded = labelHeight + textHeight + 5 + 6;
             
-            doc.fontSize(9).font('body').fillColor(theme.textDark);
-            const noteHeight = doc.heightOfString(att.note, { width: 475 });
-            doc.text(att.note, 70, yPosition, { width: 475 });
-            yPosition += noteHeight + 5;
-          }
-
-          if (att.foto.length > 0) {
-            const bottomMargin = doc.page.height - 50;
-            const headerHeight = 15;
+            ensureSpace(totalNeeded);
             
-            if (yPosition + headerHeight > bottomMargin) {
-              doc.addPage();
-              yPosition = 50;
-            }
-            
-            doc.fontSize(9).font('title').fillColor(theme.textDark).text(`Foto (${att.foto.length}):`, 70, yPosition);
-            yPosition += 15;
-
-            att.foto.forEach((foto) => {
-              const imageBlockHeight = 175;
-              
-              if (yPosition + imageBlockHeight > bottomMargin) {
-                doc.addPage();
-                yPosition = 50;
-              }
-              
-              const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
-              if (fs.existsSync(fotoFullPath)) {
-                try {
-                  doc.image(fotoFullPath, 70, yPosition, { width: 200, height: 150, fit: [200, 150] });
-                  doc.fontSize(8).font('body').fillColor(theme.textDark).text(foto.fileName, 70, yPosition + 155, { width: 200 });
-                  yPosition += 175;
-                } catch (err) {
-                  console.error(`Errore caricamento foto ${foto.fileName}:`, err);
-                  doc.fontSize(8).font('body').fillColor(theme.textDark).text(
-                    `[Foto non disponibile: ${foto.fileName}]`,
-                    70,
-                    yPosition
-                  );
-                  yPosition += 15;
-                }
-              } else {
-                doc.fontSize(8).font('body').fillColor(theme.textDark).text(
-                  `[File non trovato: ${foto.fileName}]`,
-                  70,
-                  yPosition
-                );
-                yPosition += 15;
-              }
-            });
+            doc.fontSize(9).font('title').fillColor(theme.textDark).text('Note:', 70, yPosition);
+            yPosition += labelHeight;
+            doc.fontSize(9).font('body').fillColor(theme.textDark).text(att.note, 70, yPosition, { width: 475 });
+            yPosition += textHeight + 5;
           }
 
           yPosition += 10;
-          if (yPosition < 750) {
-            doc.moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
+          if (yPosition < bottomMargin - 15) {
+            doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
+            doc.strokeColor('#000000').lineWidth(1);
             yPosition += 15;
           }
         });
       }
 
-      if (yPosition > 700) {
-        doc.addPage();
-        yPosition = 50;
-      }
+      const footerHeight = 40;
+      ensureSpace(footerHeight);
 
       yPosition += 20;
       doc.fontSize(9).font('body').fillColor(theme.textDark).text(
@@ -299,10 +327,10 @@ export async function generateReportPDF(
           try {
             const pageWidth = doc.page.width;
             const pageHeight = doc.page.height;
-            const watermarkWidth = 300;
-            const watermarkHeight = 300;
-            const xPosition = (pageWidth - watermarkWidth) / 2;
-            const yPosition = (pageHeight - watermarkHeight) / 2;
+            const watermarkWidth = 540;
+            const watermarkHeight = 540;
+            const xPosition = Math.round((pageWidth - watermarkWidth) / 2);
+            const yPosition = Math.round((pageHeight - watermarkHeight) / 2);
             
             doc.save();
             doc.opacity(0.08);
@@ -317,12 +345,24 @@ export async function generateReportPDF(
           }
         }
         
-        doc.fontSize(8).font('body').fillColor(theme.textDark).text(
-          `Pagina ${i - range.start + 1} di ${range.count}`,
-          50,
-          doc.page.height - 50,
-          { align: 'center', width: 495 }
-        );
+        const pageNumText = `Pagina ${i - range.start + 1} di ${range.count}`;
+        doc.save();
+        doc.font('body').fontSize(8).fillColor(theme.textDark);
+        const textWidth = doc.widthOfString(pageNumText);
+        const x = Math.round((doc.page.width - textWidth) / 2);
+        const y = doc.page.height - 40;
+        doc.text(pageNumText, x, y, { lineBreak: false });
+        doc.restore();
+      }
+      
+      if (headerLogoPath && range.count > 0) {
+        doc.switchToPage(range.start);
+        try {
+          doc.image(headerLogoPath, 50, headerLogoY, { width: 100 });
+          console.log('Re-drew header logo on top of watermark');
+        } catch (err) {
+          console.error('Errore re-drawing header logo:', err);
+        }
       }
 
       doc.end();

@@ -22,6 +22,9 @@ export async function GET(
   try {
     const { id } = await params;
     const reportId = parseInt(id);
+    
+    const { searchParams } = new URL(req.url);
+    const forceRegenerate = searchParams.get('force') === '1';
 
     const report = await prisma.report.findUnique({
       where: { id: reportId },
@@ -58,8 +61,40 @@ export async function GET(
 
     let pdfPath = report.pdfPath;
 
-    const relPath = pdfPath ? normalizePath(pdfPath) : null;
-    if (!pdfPath || !fs.existsSync(path.join(process.cwd(), 'public', relPath!))) {
+    if (forceRegenerate && pdfPath) {
+      const relPath = normalizePath(pdfPath);
+      const oldPdfPath = path.join(process.cwd(), 'public', relPath);
+      if (fs.existsSync(oldPdfPath)) {
+        try {
+          fs.unlinkSync(oldPdfPath);
+        } catch (err) {
+          console.error('Error deleting old PDF:', err);
+        }
+      }
+      pdfPath = null;
+    }
+
+    let pdfFullPath: string | null = null;
+    if (pdfPath) {
+      pdfFullPath = path.join(process.cwd(), 'public', normalizePath(pdfPath));
+    }
+    const pdfExists = !!(pdfFullPath && fs.existsSync(pdfFullPath));
+    
+    let needsRegeneration = !pdfPath || !pdfExists;
+    
+    if (pdfExists && impostazioni.logoPath) {
+      const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
+      if (fs.existsSync(logoFullPath)) {
+        const pdfMtime = fs.statSync(pdfFullPath!).mtimeMs;
+        const logoMtime = fs.statSync(logoFullPath).mtimeMs;
+        if (logoMtime > pdfMtime) {
+          needsRegeneration = true;
+          console.log('Logo changed, regenerating PDF');
+        }
+      }
+    }
+    
+    if (needsRegeneration) {
       const reportForPDF = {
         ...report,
         creatoIl: report.creatoIl.toISOString(),
@@ -71,12 +106,11 @@ export async function GET(
         where: { id: reportId },
         data: { pdfPath },
       });
+      
+      pdfFullPath = path.join(process.cwd(), 'public', normalizePath(pdfPath));
     }
 
-    const finalRelPath = normalizePath(pdfPath);
-    const pdfFullPath = path.join(process.cwd(), 'public', finalRelPath);
-
-    if (!fs.existsSync(pdfFullPath)) {
+    if (!pdfFullPath || !fs.existsSync(pdfFullPath)) {
       return NextResponse.json({ error: 'PDF non trovato' }, { status: 404 });
     }
 
