@@ -75,7 +75,16 @@ export async function generateReportPDF(
       doc.font('regular');
       doc.addPage();
 
-      let yPosition = 50;
+      const topMargin = 50;
+      const bottomMargin = doc.page.height - 50;
+      let yPosition = topMargin;
+
+      const ensureSpace = (needed: number) => {
+        if (yPosition + needed > bottomMargin) {
+          doc.addPage();
+          yPosition = topMargin;
+        }
+      };
 
       if (impostazioni.logoPath) {
         const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
@@ -152,10 +161,7 @@ export async function generateReportPDF(
         doc.fontSize(10).font('regular').text('Nessuna attività registrata', 50, yPosition);
       } else {
         report.attivita.forEach((att, index) => {
-          if (yPosition > 700) {
-            doc.addPage();
-            yPosition = 50;
-          }
+          ensureSpace(80);
 
           doc.fontSize(11).font('bold').text(
             `${index + 1}. ${att.descrizione}`,
@@ -200,24 +206,15 @@ export async function generateReportPDF(
           }
 
           if (att.foto.length > 0) {
-            const bottomMargin = doc.page.height - 50;
             const headerHeight = 15;
-            
-            if (yPosition + headerHeight > bottomMargin) {
-              doc.addPage();
-              yPosition = 50;
-            }
+            ensureSpace(headerHeight);
             
             doc.fontSize(9).font('bold').text(`Foto (${att.foto.length}):`, 70, yPosition);
             yPosition += 15;
 
             att.foto.forEach((foto) => {
               const imageBlockHeight = 175;
-              
-              if (yPosition + imageBlockHeight > bottomMargin) {
-                doc.addPage();
-                yPosition = 50;
-              }
+              ensureSpace(imageBlockHeight);
               
               const fotoFullPath = path.join(process.cwd(), 'public', normalizePath(foto.filePath));
               if (fs.existsSync(fotoFullPath)) {
@@ -246,7 +243,7 @@ export async function generateReportPDF(
           }
 
           yPosition += 10;
-          if (yPosition < 750) {
+          if (yPosition < bottomMargin - 50) {
             doc.moveTo(50, yPosition).lineTo(545, yPosition).strokeColor('#e5e7eb').stroke();
             doc.strokeColor('#000000');
             yPosition += 15;
@@ -254,10 +251,8 @@ export async function generateReportPDF(
         });
       }
 
-      if (yPosition > 700) {
-        doc.addPage();
-        yPosition = 50;
-      }
+      const footerHeight = 40;
+      ensureSpace(footerHeight);
 
       yPosition += 20;
       doc.fontSize(9).font('regular').text(

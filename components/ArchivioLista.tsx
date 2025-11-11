@@ -177,16 +177,14 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
                 </button>
               )}
 
-              {(r.stato === 'BOZZA' || r.stato === 'IN_LAVORAZIONE') && (
-                <button
-                  onClick={() => handleEdit(r.id, r.tipo, r.impiantoId)}
-                  className="flex items-center justify-center gap-2 px-3 py-2 text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition"
-                  title="Modifica bozza"
-                >
-                  <Edit size={18} />
-                  <span className="text-sm font-medium md:hidden lg:inline">Modifica</span>
-                </button>
-              )}
+              <button
+                onClick={() => handleEdit(r.id, r.tipo, r.impiantoId)}
+                className="flex items-center justify-center gap-2 px-3 py-2 text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition"
+                title={r.stato === 'COMPLETATO' ? 'Modifica report' : 'Modifica bozza'}
+              >
+                <Edit size={18} />
+                <span className="text-sm font-medium md:hidden lg:inline">Modifica</span>
+              </button>
 
               {isAdmin && (
                 <button
