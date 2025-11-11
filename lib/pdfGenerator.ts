@@ -4,6 +4,18 @@ import path from 'path';
 
 const normalizePath = (p: string) => (p.startsWith('/') ? p.slice(1) : p);
 
+const theme = {
+  primary: '#003366',
+  accent: '#FF9900',
+  textDark: '#2B2B2B',
+  textLight: '#FFFFFF',
+  bgLight: '#F8F8F8',
+  border: '#E0E0E0',
+  statusOk: '#10b981',
+  statusKo: '#ef4444',
+  statusNa: '#6b7280'
+};
+
 interface Foto {
   id: number;
   filePath: string;
@@ -63,17 +75,17 @@ export async function generateReportPDF(
       const filePath = path.join(pdfDir, fileName);
       const relativePath = `pdf/${fileName}`;
 
-      const fontRegular = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Regular.ttf'));
-      const fontBold = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'NotoSans-Bold.ttf'));
+      const fontBody = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'OpenSans-Regular.ttf'));
+      const fontTitle = fs.readFileSync(path.join(process.cwd(), 'public', 'fonts', 'Montserrat-Bold.ttf'));
 
       const doc = new PDFDocument({ margin: 50, size: 'A4', autoFirstPage: false, bufferPages: true });
       const stream = fs.createWriteStream(filePath);
 
-      doc.registerFont('regular', fontRegular);
-      doc.registerFont('bold', fontBold);
+      doc.registerFont('body', fontBody);
+      doc.registerFont('title', fontTitle);
 
       doc.pipe(stream);
-      doc.font('regular');
+      doc.font('body');
       doc.addPage();
 
       const topMargin = 50;
@@ -108,16 +120,16 @@ export async function generateReportPDF(
         }
       }
 
-      doc.fontSize(20).font('bold').text(impostazioni.nomeAzienda, 50, yPosition);
+      doc.fontSize(20).font('title').fillColor(theme.primary).text(impostazioni.nomeAzienda, 50, yPosition);
       yPosition += 25;
 
       if (impostazioni.indirizzo) {
-        doc.fontSize(10).font('regular').text(impostazioni.indirizzo, 50, yPosition);
+        doc.fontSize(10).font('body').fillColor(theme.textDark).text(impostazioni.indirizzo, 50, yPosition);
         yPosition += 15;
       }
 
       if (impostazioni.partitaIva) {
-        doc.fontSize(10).font('regular').text(`PARTITA IVA ${impostazioni.partitaIva}`, 50, yPosition);
+        doc.fontSize(10).font('body').fillColor(theme.textDark).text(`PARTITA IVA ${impostazioni.partitaIva}`, 50, yPosition);
         yPosition += 15;
       }
 
@@ -125,15 +137,15 @@ export async function generateReportPDF(
       if (impostazioni.telefono) contactInfo.push(`Tel: ${impostazioni.telefono}`);
       if (impostazioni.email) contactInfo.push(`Email: ${impostazioni.email}`);
       if (contactInfo.length > 0) {
-        doc.fontSize(10).font('regular').text(contactInfo.join(' • '), 50, yPosition);
+        doc.fontSize(10).font('body').fillColor(theme.textDark).text(contactInfo.join(' • '), 50, yPosition);
         yPosition += 20;
       }
 
-      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
       doc.lineWidth(1);
       yPosition += 30;
 
-      doc.fontSize(18).font('bold').text(
+      doc.fontSize(18).font('title').fillColor(theme.primary).text(
         report.tipo === 'MANUTENZIONE' ? 'REPORT MANUTENZIONE ORDINARIA' : 'REPORT INTERVENTO TECNICO',
         50,
         yPosition,
@@ -141,10 +153,10 @@ export async function generateReportPDF(
       );
       yPosition += 30;
 
-      doc.fontSize(12).font('bold').text(`Codice Report: ${report.codice}`, 50, yPosition);
+      doc.fontSize(12).font('title').fillColor(theme.textDark).text(`Codice Report: ${report.codice}`, 50, yPosition);
       yPosition += 20;
 
-      doc.fontSize(10).font('regular');
+      doc.fontSize(10).font('body').fillColor(theme.textDark);
       doc.text(`Data: ${new Date(report.creatoIl).toLocaleDateString('it-IT', {
         day: '2-digit',
         month: '2-digit',
@@ -166,12 +178,12 @@ export async function generateReportPDF(
       }
 
       yPosition += 10;
-      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).stroke();
+      doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
       doc.lineWidth(1);
       yPosition += 20;
 
       if (report.attivita.length === 0) {
-        doc.fontSize(10).font('regular').text('Nessuna attività registrata', 50, yPosition);
+        doc.fontSize(10).font('body').fillColor(theme.textDark).text('Nessuna attività registrata', 50, yPosition);
       } else {
         report.attivita.forEach((att, index) => {
           ensureSpace(80);
@@ -180,24 +192,29 @@ export async function generateReportPDF(
             ? `${att.componente.nome} - ${att.descrizione}`
             : att.descrizione;
 
-          doc.fontSize(11).font('bold').text(
+          doc.fontSize(11).font('title').fillColor(theme.textDark);
+          const taskHeight = doc.heightOfString(`${index + 1}. ${taskTitle}`, { width: 495 });
+          doc.text(
             `${index + 1}. ${taskTitle}`,
             50,
             yPosition,
             { width: 495 }
           );
-          yPosition += 20;
+          yPosition += taskHeight + 6;
 
-          const statoLabel = att.stato === 'FATTO' ? '✓ Fatto' : 
-                            att.stato === 'NON_FATTO' ? '✗ Non fatto' : 
-                            '○ Non applicabile';
-          const statoColor = att.stato === 'FATTO' ? '#10b981' : 
-                            att.stato === 'NON_FATTO' ? '#ef4444' : 
-                            '#6b7280';
+          const statoLabel = att.stato === 'FATTO' ? 'FATTO' : 
+                            att.stato === 'NON_FATTO' ? 'NON FATTO' : 
+                            'NON APPLICABILE';
+          const statoColor = att.stato === 'FATTO' ? theme.statusOk : 
+                            att.stato === 'NON_FATTO' ? theme.statusKo : 
+                            theme.statusNa;
 
-          doc.fontSize(9).fillColor(statoColor).text(`Stato: ${statoLabel}`, 70, yPosition);
-          doc.fillColor('#000000');
-          yPosition += 15;
+          doc.fontSize(9).font('body').fillColor(statoColor);
+          const statoText = `Stato: ${statoLabel}`;
+          const statoHeight = doc.heightOfString(statoText, { width: 475 });
+          doc.text(statoText, 70, yPosition);
+          doc.fillColor(theme.textDark);
+          yPosition += statoHeight + 4;
 
           const validFoto = att.foto.filter(foto => {
             const fotoFullPath = path.join('/data', normalizePath(foto.filePath));
@@ -208,7 +225,7 @@ export async function generateReportPDF(
             const headerHeight = 15;
             ensureSpace(headerHeight);
             
-            doc.fontSize(9).font('bold').text(`Foto (${validFoto.length}):`, 70, yPosition);
+            doc.fontSize(9).font('title').fillColor(theme.textDark).text(`Foto (${validFoto.length}):`, 70, yPosition);
             yPosition += 15;
 
             const photoWidth = 242;
@@ -257,33 +274,33 @@ export async function generateReportPDF(
 
           if (att.motivazione) {
             const labelHeight = 12;
-            const textHeight = doc.fontSize(9).font('regular').heightOfString(att.motivazione, { width: 475 });
+            const textHeight = doc.fontSize(9).font('body').heightOfString(att.motivazione, { width: 475 });
             const totalNeeded = labelHeight + textHeight + 5 + 6;
             
             ensureSpace(totalNeeded);
             
-            doc.fontSize(9).font('bold').text('Motivazione:', 70, yPosition);
+            doc.fontSize(9).font('title').fillColor(theme.textDark).text('Motivazione:', 70, yPosition);
             yPosition += labelHeight;
-            doc.fontSize(9).font('regular').text(att.motivazione, 70, yPosition, { width: 475 });
+            doc.fontSize(9).font('body').fillColor(theme.textDark).text(att.motivazione, 70, yPosition, { width: 475 });
             yPosition += textHeight + 5;
           }
 
           if (att.note) {
             const labelHeight = 12;
-            const textHeight = doc.fontSize(9).font('regular').heightOfString(att.note, { width: 475 });
+            const textHeight = doc.fontSize(9).font('body').heightOfString(att.note, { width: 475 });
             const totalNeeded = labelHeight + textHeight + 5 + 6;
             
             ensureSpace(totalNeeded);
             
-            doc.fontSize(9).font('bold').text('Note:', 70, yPosition);
+            doc.fontSize(9).font('title').fillColor(theme.textDark).text('Note:', 70, yPosition);
             yPosition += labelHeight;
-            doc.fontSize(9).font('regular').text(att.note, 70, yPosition, { width: 475 });
+            doc.fontSize(9).font('body').fillColor(theme.textDark).text(att.note, 70, yPosition, { width: 475 });
             yPosition += textHeight + 5;
           }
 
           yPosition += 10;
           if (yPosition < bottomMargin - 15) {
-            doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor('#e5e7eb').stroke();
+            doc.lineWidth(0.5).moveTo(50, yPosition).lineTo(545, yPosition).strokeColor(theme.border).stroke();
             doc.strokeColor('#000000').lineWidth(1);
             yPosition += 15;
           }
@@ -294,7 +311,7 @@ export async function generateReportPDF(
       ensureSpace(footerHeight);
 
       yPosition += 20;
-      doc.fontSize(9).font('regular').text(
+      doc.fontSize(9).font('body').fillColor(theme.textDark).text(
         impostazioni.intestazionePdf,
         50,
         yPosition,
@@ -316,7 +333,7 @@ export async function generateReportPDF(
             const yPosition = Math.round((pageHeight - watermarkHeight) / 2);
             
             doc.save();
-            doc.opacity(0.12);
+            doc.opacity(0.08);
             doc.image(watermarkPath, xPosition, yPosition, {
               width: watermarkWidth,
               height: watermarkHeight,
@@ -330,7 +347,7 @@ export async function generateReportPDF(
         
         const pageNumText = `Pagina ${i - range.start + 1} di ${range.count}`;
         doc.save();
-        doc.font('regular').fontSize(8).fillColor('#000000');
+        doc.font('body').fontSize(8).fillColor(theme.textDark);
         const textWidth = doc.widthOfString(pageNumText);
         const x = Math.round((doc.page.width - textWidth) / 2);
         const y = doc.page.height - 40;
