@@ -76,7 +76,16 @@ export async function generateReportPDF(
       doc.font('regular');
       doc.addPage();
 
-      let yPosition = 50;
+      const topMargin = 50;
+      const bottomMargin = doc.page.height - 50;
+      let yPosition = topMargin;
+
+      const ensureSpace = (needed: number) => {
+        if (yPosition + needed > bottomMargin) {
+          doc.addPage();
+          yPosition = topMargin;
+        }
+      };
 
       let headerLogoPath: string | null = null;
       let headerLogoY = yPosition;
@@ -165,10 +174,7 @@ export async function generateReportPDF(
         doc.fontSize(10).font('regular').text('Nessuna attività registrata', 50, yPosition);
       } else {
         report.attivita.forEach((att, index) => {
-          if (yPosition > 700) {
-            doc.addPage();
-            yPosition = 50;
-          }
+          ensureSpace(80);
 
           const taskTitle = att.componente 
             ? `${att.componente.nome} - ${att.descrizione}`
@@ -199,13 +205,8 @@ export async function generateReportPDF(
           });
 
           if (validFoto.length > 0) {
-            const bottomMargin = doc.page.height - 50;
             const headerHeight = 15;
-            
-            if (yPosition + headerHeight > bottomMargin) {
-              doc.addPage();
-              yPosition = 50;
-            }
+            ensureSpace(headerHeight);
             
             doc.fontSize(9).font('bold').text(`Foto (${validFoto.length}):`, 70, yPosition);
             yPosition += 15;
@@ -233,7 +234,7 @@ export async function generateReportPDF(
               
               if (yPosition + photoHeight > bottomMargin) {
                 doc.addPage();
-                yPosition = 50;
+                yPosition = topMargin;
                 lastRowStartY = yPosition;
               }
               
@@ -294,6 +295,7 @@ export async function generateReportPDF(
           }
         });
       }
+
 
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {

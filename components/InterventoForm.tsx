@@ -55,6 +55,32 @@ export default function InterventoForm({
     };
 
     const createOrLoadReport = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const reportIdFromUrl = urlParams.get('reportId');
+      
+      if (reportIdFromUrl) {
+        const detailRes = await fetch(`/api/report/${reportIdFromUrl}`);
+        const reportDetail = await detailRes.json();
+        
+        setReportId(reportDetail.id);
+        
+        if (reportDetail.attivita && reportDetail.attivita.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const loadedAttivita = reportDetail.attivita.map((att: any) => ({
+            id: att.id,
+            descrizione: att.descrizione,
+            stato: att.stato,
+            motivazione: att.motivazione || '',
+            note: att.note || '',
+            componenteId: att.componenteId,
+            foto: att.foto || [],
+          }));
+          setAttivita(loadedAttivita);
+          setExpandedActivities(new Set([loadedAttivita.length - 1]));
+        }
+        return;
+      }
+      
       let res = await fetch(`/api/report?impiantoId=${impiantoId}&tipo=INTERVENTO&stato=IN_LAVORAZIONE&limit=1`);
       let data = await res.json();
       
@@ -73,6 +99,7 @@ export default function InterventoForm({
         setReportId(reportDetail.id);
         
         if (reportDetail.attivita && reportDetail.attivita.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const loadedAttivita = reportDetail.attivita.map((att: any) => ({
             id: att.id,
             descrizione: att.descrizione,
