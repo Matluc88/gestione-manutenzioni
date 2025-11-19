@@ -209,9 +209,14 @@ export default function InterventoForm({
     const att = attivita[index];
     
     if (att.id) {
-      await fetch(`/api/attivita/${att.id}`, {
+      const response = await fetch(`/api/attivita/${att.id}`, {
         method: 'DELETE',
       });
+      
+      if (!response.ok) {
+        alert('Errore durante l\'eliminazione dell\'attività. Riprova.');
+        return;
+      }
     }
     
     const newAttivita = attivita.filter((_, i) => i !== index);
