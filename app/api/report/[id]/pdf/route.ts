@@ -82,14 +82,23 @@ export async function GET(
     
     let needsRegeneration = !pdfPath || !pdfExists;
     
-    if (pdfExists && impostazioni.logoPath) {
-      const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
-      if (fs.existsSync(logoFullPath)) {
-        const pdfMtime = fs.statSync(pdfFullPath!).mtimeMs;
-        const logoMtime = fs.statSync(logoFullPath).mtimeMs;
-        if (logoMtime > pdfMtime) {
-          needsRegeneration = true;
-          console.log('Logo changed, regenerating PDF');
+    if (pdfExists && pdfFullPath) {
+      const pdfMtime = fs.statSync(pdfFullPath).mtimeMs;
+      const reportModifiedTime = new Date(report.modificatoIl).getTime();
+      
+      if (reportModifiedTime > pdfMtime) {
+        needsRegeneration = true;
+        console.log('Report modified after PDF, regenerating');
+      }
+      
+      if (impostazioni.logoPath) {
+        const logoFullPath = path.join(process.cwd(), 'public', normalizePath(impostazioni.logoPath));
+        if (fs.existsSync(logoFullPath)) {
+          const logoMtime = fs.statSync(logoFullPath).mtimeMs;
+          if (logoMtime > pdfMtime) {
+            needsRegeneration = true;
+            console.log('Logo changed, regenerating PDF');
+          }
         }
       }
     }
