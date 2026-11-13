@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Save, FileText, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import FotoUpload from './FotoUpload';
+import { toDatetimeLocal, datetimeLocalToISO } from '@/lib/dataIntervento';
 
 interface Componente {
   id: number;
@@ -44,6 +45,7 @@ export default function InterventoForm({
   
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [dataIntervento, setDataIntervento] = useState<string>(() => toDatetimeLocal(new Date()));
   
   const router = useRouter();
 
@@ -63,6 +65,7 @@ export default function InterventoForm({
         const reportDetail = await detailRes.json();
         
         setReportId(reportDetail.id);
+        setDataIntervento(toDatetimeLocal(reportDetail.dataIntervento ?? reportDetail.creatoIl));
         
         if (reportDetail.attivita && reportDetail.attivita.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,6 +100,7 @@ export default function InterventoForm({
         const reportDetail = await detailRes.json();
         
         setReportId(reportDetail.id);
+        setDataIntervento(toDatetimeLocal(reportDetail.dataIntervento ?? reportDetail.creatoIl));
         
         if (reportDetail.attivita && reportDetail.attivita.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -313,7 +317,7 @@ export default function InterventoForm({
       await fetch(`/api/report/${reportId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stato: 'IN_LAVORAZIONE' }),
+        body: JSON.stringify({ stato: 'IN_LAVORAZIONE', dataIntervento: datetimeLocalToISO(dataIntervento) }),
       });
     }
     
@@ -322,6 +326,10 @@ export default function InterventoForm({
   };
 
   const handleGeneraPDF = async () => {
+    if (!datetimeLocalToISO(dataIntervento)) {
+      alert('Inserisci la data dell\'intervento');
+      return;
+    }
     setGenerating(true);
     await salvaAttivita();
     
@@ -329,7 +337,7 @@ export default function InterventoForm({
       await fetch(`/api/report/${reportId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stato: 'COMPLETATO' }),
+        body: JSON.stringify({ stato: 'COMPLETATO', dataIntervento: datetimeLocalToISO(dataIntervento) }),
       });
     }
     
@@ -340,6 +348,21 @@ export default function InterventoForm({
 
   return (
     <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <label htmlFor="dataIntervento" className="block text-xl font-bold mb-4">
+          Data intervento
+        </label>
+        <input
+          id="dataIntervento"
+          type="datetime-local"
+          value={dataIntervento}
+          onChange={(e) => setDataIntervento(e.target.value)}
+          required
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+        />
+        <p className="text-sm text-gray-500 mt-2">Questa data compare sul PDF del report.</p>
+      </div>
+
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-xl font-bold mb-4">Seleziona componente</h2>
         

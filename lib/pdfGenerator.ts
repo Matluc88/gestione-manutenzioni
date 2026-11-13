@@ -1,3 +1,4 @@
+import { formatDataOraIT } from './dataIntervento';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
@@ -83,6 +84,7 @@ interface Report {
   tipo: string;
   stato: string;
   creatoIl: string;
+  dataIntervento?: string | null;
   impianto: {
     nome: string;
     proprieta: string | null;
@@ -215,13 +217,7 @@ export async function generateReportPDF(
       yPosition += 20;
 
       doc.fontSize(10).font('body').fillColor(theme.textDark);
-      doc.text(`Data: ${new Date(report.creatoIl).toLocaleDateString('it-IT', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}`, 50, yPosition);
+      doc.text(`Data: ${formatDataOraIT(report.dataIntervento ?? report.creatoIl)}`, 50, yPosition);
       yPosition += 15;
 
       doc.text(`Operatore: ${report.utente.username}`, 50, yPosition);

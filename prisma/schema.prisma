@@ -49,6 +49,7 @@ model Report {
   tipo          TipoReport
   stato         StatoReport @default(BOZZA)
   pdfPath       String?
+  dataIntervento DateTime?
   creatoIl      DateTime  @default(now())
   modificatoIl  DateTime  @updatedAt
   

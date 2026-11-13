@@ -49,12 +49,49 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { stato } = body;
+  const { stato, dataIntervento } = body;
+
+  const data: { stato?: 'BOZZA' | 'IN_LAVORAZIONE' | 'COMPLETATO'; dataIntervento?: Date | null; pdfPath?: null } = {};
+
+  if (stato !== undefined) {
+    if (!['BOZZA', 'IN_LAVORAZIONE', 'COMPLETATO'].includes(stato)) {
+      return NextResponse.json({ error: 'Stato non valido' }, { status: 400 });
+    }
+    data.stato = stato;
+  }
+
+  if (dataIntervento !== undefined) {
+    if (dataIntervento === null || dataIntervento === '') {
+      data.dataIntervento = null;
+    } else {
+      const parsed = new Date(dataIntervento);
+      if (isNaN(parsed.getTime())) {
+        return NextResponse.json({ error: 'Data intervento non valida' }, { status: 400 });
+      }
+      data.dataIntervento = parsed;
+    }
+  }
 
   const { id } = await params;
+  const reportId = parseInt(id);
+
+  if (data.dataIntervento !== undefined) {
+    const esistente = await prisma.report.findUnique({
+      where: { id: reportId },
+      select: { dataIntervento: true },
+    });
+    if (!esistente) {
+      return NextResponse.json({ error: 'Report non trovato' }, { status: 404 });
+    }
+    // Se la data cambia, il PDF già generato non è più valido: forza la rigenerazione
+    if (esistente.dataIntervento?.getTime() !== data.dataIntervento?.getTime()) {
+      data.pdfPath = null;
+    }
+  }
+
   const report = await prisma.report.update({
-    where: { id: parseInt(id) },
-    data: { stato },
+    where: { id: reportId },
+    data,
   });
 
   return NextResponse.json(report);

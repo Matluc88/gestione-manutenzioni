@@ -107,6 +107,7 @@ export async function GET(
       const reportForPDF = {
         ...report,
         creatoIl: report.creatoIl.toISOString(),
+        dataIntervento: report.dataIntervento ? report.dataIntervento.toISOString() : null,
       };
       
       pdfPath = await generateReportPDF(reportForPDF, impostazioni);
