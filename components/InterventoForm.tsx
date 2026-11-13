@@ -366,7 +366,7 @@ export default function InterventoForm({
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-xl font-bold mb-4">Seleziona componente</h2>
         
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
           <select
             value={componenteSelezionato || ''}
             onChange={(e) => setComponenteSelezionato(parseInt(e.target.value))}
@@ -382,7 +382,7 @@ export default function InterventoForm({
           
           <button
             onClick={() => setShowNewComponente(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition whitespace-nowrap"
           >
             <Plus size={20} />
             Nuovo componente
@@ -511,11 +511,11 @@ export default function InterventoForm({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Stato *
                       </label>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         <button
                           type="button"
                           onClick={() => updateAttivita(index, 'stato', 'FATTO')}
-                          className={`px-4 py-3 rounded-lg border-2 transition ${
+                          className={`px-1 sm:px-4 py-3 rounded-lg border-2 transition text-sm sm:text-base leading-tight ${
                             att.stato === 'FATTO'
                               ? 'border-green-500 bg-green-50 text-green-700'
                               : 'border-gray-300 hover:border-green-500'
@@ -526,7 +526,7 @@ export default function InterventoForm({
                         <button
                           type="button"
                           onClick={() => updateAttivita(index, 'stato', 'NON_FATTO')}
-                          className={`px-4 py-3 rounded-lg border-2 transition ${
+                          className={`px-1 sm:px-4 py-3 rounded-lg border-2 transition text-sm sm:text-base leading-tight ${
                             att.stato === 'NON_FATTO'
                               ? 'border-red-500 bg-red-50 text-red-700'
                               : 'border-gray-300 hover:border-red-500'
@@ -537,7 +537,7 @@ export default function InterventoForm({
                         <button
                           type="button"
                           onClick={() => updateAttivita(index, 'stato', 'NON_APPLICABILE')}
-                          className={`px-4 py-3 rounded-lg border-2 transition ${
+                          className={`px-1 sm:px-4 py-3 rounded-lg border-2 transition text-sm sm:text-base leading-tight ${
                             att.stato === 'NON_APPLICABILE'
                               ? 'border-gray-500 bg-gray-50 text-gray-700'
                               : 'border-gray-300 hover:border-gray-500'

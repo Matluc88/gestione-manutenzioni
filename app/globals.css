@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  /* L'app è progettata solo in tema chiaro: evita testo chiaro su sfondo bianco
+     quando il dispositivo è in modalità scura */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -12,12 +15,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
 body {
   background: var(--background);

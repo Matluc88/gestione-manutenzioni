@@ -37,35 +37,35 @@ export default function Navbar({ user }: NavbarProps) {
   return (
     <>
       <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
               <button
                 onClick={handleBack}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
                 title="Indietro"
               >
                 <ChevronLeft size={20} />
               </button>
               <button
                 onClick={handleForward}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
                 title="Avanti"
               >
                 <ChevronRight size={20} />
               </button>
               <button
                 onClick={handleHome}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
                 title="Dashboard"
               >
                 <Home size={20} />
               </button>
             </div>
-            <div className="border-l border-gray-300 h-8"></div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">ONE-M ENERGY SOLUTIONS</h1>
-              <p className="text-sm text-gray-600">
+            <div className="border-l border-gray-300 h-8 shrink-0"></div>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-xl font-bold text-gray-900 leading-tight sm:truncate">ONE-M ENERGY SOLUTIONS</h1>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">
                 {user.username} • {user.ruolo === 'ADMIN' ? '👑 Admin' : '👤 Collaboratore'}
               </p>
             </div>
@@ -73,10 +73,12 @@ export default function Navbar({ user }: NavbarProps) {
 
           <button
             onClick={() => setShowLogoutDialog(true)}
-            className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+            className="flex items-center gap-2 p-2 sm:px-4 text-red-600 hover:bg-red-50 rounded-lg transition shrink-0"
+            title="Esci"
+            aria-label="Esci"
           >
             <LogOut size={20} />
-            Esci
+            <span className="hidden sm:inline">Esci</span>
           </button>
         </div>
       </nav>
