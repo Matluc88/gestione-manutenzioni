@@ -10,6 +10,7 @@ interface Report {
   stato: string;
   pdfPath: string | null;
   creatoIl: string;
+  dataIntervento?: string | null;
   numAttivita: number;
   impiantoId: number;
   impianto: {
@@ -135,7 +136,8 @@ export default function ArchivioLista({ report, isAdmin, onDelete, onView }: Arc
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500 font-medium min-w-fit">Data:</span>
                   <span className="text-gray-900">
-                    {new Date(r.creatoIl).toLocaleDateString('it-IT', {
+                    {new Date(r.dataIntervento ?? r.creatoIl).toLocaleDateString('it-IT', {
+                      timeZone: 'Europe/Rome',
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',

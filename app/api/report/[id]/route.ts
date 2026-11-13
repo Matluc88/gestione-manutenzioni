@@ -74,19 +74,29 @@ export async function PUT(
 
   const { id } = await params;
   const reportId = parseInt(id);
+  if (!Number.isInteger(reportId)) {
+    return NextResponse.json({ error: 'Report non trovato' }, { status: 404 });
+  }
 
-  if (data.dataIntervento !== undefined) {
-    const esistente = await prisma.report.findUnique({
-      where: { id: reportId },
-      select: { dataIntervento: true },
-    });
-    if (!esistente) {
-      return NextResponse.json({ error: 'Report non trovato' }, { status: 404 });
-    }
-    // Se la data cambia, il PDF già generato non è più valido: forza la rigenerazione
-    if (esistente.dataIntervento?.getTime() !== data.dataIntervento?.getTime()) {
-      data.pdfPath = null;
-    }
+  const esistente = await prisma.report.findUnique({
+    where: { id: reportId },
+    select: { dataIntervento: true, utenteId: true },
+  });
+  if (!esistente) {
+    return NextResponse.json({ error: 'Report non trovato' }, { status: 404 });
+  }
+
+  // Solo l'admin o l'autore del report possono modificarlo
+  if (session.user.ruolo !== 'ADMIN' && esistente.utenteId !== parseInt(session.user.id)) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
+  }
+
+  // Se la data cambia, il PDF già generato non è più valido: forza la rigenerazione
+  if (
+    data.dataIntervento !== undefined &&
+    esistente.dataIntervento?.getTime() !== data.dataIntervento?.getTime()
+  ) {
+    data.pdfPath = null;
   }
 
   const report = await prisma.report.update({

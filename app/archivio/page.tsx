@@ -209,6 +209,7 @@ export default function ArchivioPage() {
         <ReportModal
           reportId={selectedReportId}
           onClose={handleCloseModal}
+          onUpdated={fetchReport}
         />
       )}
     </div>

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, Download, Loader2, Calendar, User, Building, FileText } from 'lucide-react';
+import { X, Download, Loader2, Calendar, User, Building, FileText, Pencil, Check } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { toDatetimeLocal, datetimeLocalToISO, formatDataOraIT } from '@/lib/dataIntervento';
 import Image from 'next/image';
 
 interface Foto {
@@ -29,7 +31,9 @@ interface Report {
   stato: string;
   pdfPath: string | null;
   creatoIl: string;
+  dataIntervento: string | null;
   modificatoIl: string;
+  utenteId: number;
   impianto: {
     nome: string;
     proprieta: string | null;
@@ -43,9 +47,15 @@ interface Report {
 interface ReportModalProps {
   reportId: number;
   onClose: () => void;
+  onUpdated?: () => void;
 }
 
-export default function ReportModal({ reportId, onClose }: ReportModalProps) {
+export default function ReportModal({ reportId, onClose, onUpdated }: ReportModalProps) {
+  const { data: session } = useSession();
+  const [editingData, setEditingData] = useState(false);
+  const [dataValue, setDataValue] = useState('');
+  const [savingData, setSavingData] = useState(false);
+  const [dataError, setDataError] = useState('');
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -77,6 +87,46 @@ export default function ReportModal({ reportId, onClose }: ReportModalProps) {
       document.body.style.overflow = 'unset';
     };
   }, [fetchReport]);
+
+  const canEditData =
+    !!report &&
+    !!session &&
+    (session.user.ruolo === 'ADMIN' || String(report.utenteId) === String(session.user.id));
+
+  const startEditData = () => {
+    if (!report) return;
+    setDataValue(toDatetimeLocal(report.dataIntervento ?? report.creatoIl));
+    setDataError('');
+    setEditingData(true);
+  };
+
+  const saveData = async () => {
+    const iso = datetimeLocalToISO(dataValue);
+    if (!iso) {
+      setDataError("Inserisci una data valida");
+      return;
+    }
+    setSavingData(true);
+    setDataError('');
+    try {
+      const res = await fetch(`/api/report/${reportId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataIntervento: iso }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Salvataggio non riuscito');
+      }
+      setEditingData(false);
+      await fetchReport();
+      onUpdated?.();
+    } catch (err: unknown) {
+      setDataError(err instanceof Error ? err.message : 'Salvataggio non riuscito');
+    } finally {
+      setSavingData(false);
+    }
+  };
 
   const handleDownload = () => {
     window.open(`/api/report/${reportId}/pdf`, '_blank');
@@ -182,17 +232,54 @@ export default function ReportModal({ reportId, onClose }: ReportModalProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-start gap-2">
                     <Calendar size={18} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-700">Data creazione</p>
-                      <p className="text-gray-900">
-                        {new Date(report.creatoIl).toLocaleDateString('it-IT', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-700">Data intervento</p>
+                      {editingData ? (
+                        <div className="mt-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              type="datetime-local"
+                              value={dataValue}
+                              onChange={(e) => { setDataValue(e.target.value); setDataError(''); }}
+                              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            />
+                            <button
+                              onClick={saveData}
+                              disabled={savingData}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                            >
+                              {savingData ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                              Salva
+                            </button>
+                            <button
+                              onClick={() => setEditingData(false)}
+                              disabled={savingData}
+                              className="px-3 py-1.5 border border-gray-300 rounded-lg hover:bg-white"
+                            >
+                              Annulla
+                            </button>
+                          </div>
+                          {dataError && <p className="text-red-600 text-xs mt-1">{dataError}</p>}
+                          <p className="text-gray-500 text-xs mt-1">Il PDF verrà rigenerato con la nuova data.</p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <p className="text-gray-900">{formatDataOraIT(report.dataIntervento ?? report.creatoIl)}</p>
+                          {canEditData && (
+                            <button
+                              onClick={startEditData}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded"
+                              title="Modifica data intervento"
+                            >
+                              <Pencil size={12} />
+                              Modifica
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {report.dataIntervento && !editingData && (
+                        <p className="text-gray-500 text-xs mt-0.5">Creato il {formatDataOraIT(report.creatoIl)}</p>
+                      )}
                     </div>
                   </div>
 

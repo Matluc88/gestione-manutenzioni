@@ -210,6 +210,7 @@ export default function ArchivioIntervento() {
         <ReportModal
           reportId={selectedReportId}
           onClose={handleCloseModal}
+          onUpdated={fetchReport}
         />
       )}
     </div>

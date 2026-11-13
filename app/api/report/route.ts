@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
         stato: r.stato,
         pdfPath: r.pdfPath,
         creatoIl: r.creatoIl,
+        dataIntervento: r.dataIntervento,
         modificatoIl: r.modificatoIl,
         impiantoId: r.impiantoId,
         impianto: r.impianto,

@@ -210,6 +210,7 @@ export default function ArchivioManutenzione() {
         <ReportModal
           reportId={selectedReportId}
           onClose={handleCloseModal}
+          onUpdated={fetchReport}
         />
       )}
     </div>
