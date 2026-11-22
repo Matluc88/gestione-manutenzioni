@@ -243,25 +243,20 @@ export default function InterventoForm({
     setExpandedActivities(newExpanded);
   };
 
-  const salvaAttivita = async () => {
-    if (!reportId) return;
+  const salvaAttivita = async (): Promise<boolean> => {
+    if (!reportId) return false;
 
     for (let i = 0; i < attivita.length; i++) {
       const att = attivita[i];
       
       if (!att.descrizione) {
         alert('Descrizione obbligatoria per tutte le attività');
-        return;
+        return false;
       }
       
       if (att.stato === 'NON_FATTO' && !att.motivazione) {
         alert('Motivazione obbligatoria per attività non fatte');
-        return;
-      }
-
-      if ((att.stato === 'FATTO' || att.stato === 'NON_FATTO') && att.foto.length === 0) {
-        alert(`Foto obbligatoria per attività: ${att.descrizione}`);
-        return;
+        return false;
       }
 
       if (att.id) {
@@ -298,11 +293,15 @@ export default function InterventoForm({
         setAttivita(newAttivita);
       }
     }
+    return true;
   };
 
   const handleSalvaBozza = async () => {
     setSaving(true);
-    await salvaAttivita();
+    if (!(await salvaAttivita())) {
+      setSaving(false);
+      return;
+    }
     
     if (reportId) {
       await fetch(`/api/report/${reportId}`, {
@@ -318,7 +317,10 @@ export default function InterventoForm({
 
   const handleGeneraPDF = async () => {
     setGenerating(true);
-    await salvaAttivita();
+    if (!(await salvaAttivita())) {
+      setGenerating(false);
+      return;
+    }
     
     if (reportId) {
       await fetch(`/api/report/${reportId}`, {
@@ -565,7 +567,6 @@ export default function InterventoForm({
                           );
                           setAttivita(newAttivita);
                         }}
-                        required={att.stato === 'FATTO' || att.stato === 'NON_FATTO'}
                       />
                     )}
                   </div>
